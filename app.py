@@ -38,6 +38,12 @@ SUPERVISORES_CONFIG = {
     "ACAPULCO": 8
 }
 
+MANZANAS_FILES = {
+    "IGUALA": "data/processed/manzanas_optimizadas/manzanas_iguala_opt.shp",
+    "CHILPANCINGO": "data/processed/manzanas_optimizadas/manzanas_chilpancingo_opt.shp",
+    "ACAPULCO": "data/processed/manzanas_optimizadas/manzanas_acapulco_opt.shp"
+}
+
 # --- 2. FUNCIONES DE LÓGICA ---
 
 @st.cache_data
@@ -116,6 +122,18 @@ def procesar_todo_el_estado(gdf_global):
         return pd.concat(resultados)
     return gpd.GeoDataFrame()
 
+def load_manzanas_optimizadas(municipio_key):
+    """Carga las manzanas INEGI procesadas."""
+    if municipio_key not in MANZANAS_FILES: return None
+    
+    path = MANZANAS_FILES[municipio_key]
+    if not os.path.exists(path): return None
+    
+    try:
+        return gpd.read_file(path)
+    except Exception: return None
+
+
 # --- 3. UI DASHBOARD ---
 
 def main():
@@ -193,6 +211,7 @@ def main():
         except:
             return "gray"
 
+    # CAPA DE SECCIONES (Esta es la capa base del choropleth)
     geo_json = folium.GeoJson(
         gdf_view,
         name="Secciones Electorales",
@@ -207,6 +226,40 @@ def main():
         ),
         popup=folium.GeoJsonPopup(fields=['seccion'])
     ).add_to(m)
+
+    # ---------------------------------------------------------
+    # 👇 AQUÍ INSERTA EL BLOQUE DE LA CAPA DE MANZANAS 👇
+    # ---------------------------------------------------------
+    if not es_global:
+        st.sidebar.markdown("---")
+        # Checkbox en el sidebar para activar la capa
+        ver_manzanas = st.sidebar.checkbox("🏘️ Mostrar Manzanas (INEGI)", value=False)
+        
+        if ver_manzanas:
+            with st.spinner(f"Cargando manzanas de {seleccion}..."):
+                # Llamada a la función externa que definimos antes
+                gdf_mz = load_manzanas_optimizadas(seleccion)
+                
+                if gdf_mz is not None and not gdf_mz.empty:
+                    fg_manzanas = folium.FeatureGroup(name="Manzanas (INEGI)", show=True)
+                    
+                    folium.GeoJson(
+                        gdf_mz,
+                        style_function=lambda x: {
+                            'fillColor': 'transparent', # Transparente para ver el color de fondo
+                            'color': '#444444',         # Gris oscuro para las líneas
+                            'weight': 0.7,              # Línea fina
+                            'dashArray': '4, 4',        # Línea punteada
+                            'opacity': 0.8
+                        },
+                        # Tooltip con la clave geoestadística si existe
+                        tooltip=folium.GeoJsonTooltip(fields=['CVEGEO'], aliases=['Clave:'], localize=True) if 'CVEGEO' in gdf_mz.columns else None
+                    ).add_to(fg_manzanas)
+                    
+                    fg_manzanas.add_to(m)
+                else:
+                    st.toast("No hay manzanas procesadas para esta zona.", icon="⚠️")
+    # ---------------------------------------------------------
 
     Search(
         layer=geo_json,
@@ -237,7 +290,7 @@ def main():
         st.dataframe(resumen, use_container_width=True, height=300)
     
     with col_t2:
-            st.info("Descargas y Reportes") # Texto actualizado
+            st.info("Descargas y Reportes")
             
             # Botón 1: CSV
             csv = gdf_view[['seccion', 'nombre_municipio', 'Supervisor_Global', 'encuestas_totales']].to_csv(index=False)
@@ -249,9 +302,9 @@ def main():
                 type="primary"
             )
             
-            st.write("") # Espacio vacío visual
+            st.write("") 
             
-            # --- NUEVO: Botón 2: Mapa HTML ---
+            # Botón 2: Mapa HTML
             map_html = io.BytesIO()
             m.save(map_html, close_file=False)
             st.download_button(
@@ -261,7 +314,7 @@ def main():
                 mime="text/html"
             )
     
-    # --- NUEVO: NOTA METODOLÓGICA (AL PIE) ---
+    # --- NOTA METODOLÓGICA ---
     st.markdown("---")
     with st.expander("ℹ️ Nota Técnica: Metodología de Agrupación (Algoritmo Balanceado)"):
         st.markdown("""
