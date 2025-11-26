@@ -1,0 +1,15 @@
+# Ignorar datos
+#data/
+#*.csv
+#*.xlsx
+#*.shp
+#.shx
+#.dbf
+#.prj
+
+# Ignorar archivos de sistema y entorno
+__pycache__/
+*.pyc
+venv/
+.env
+.DS_Store
