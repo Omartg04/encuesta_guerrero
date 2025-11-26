@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import io
 import geopandas as gpd
 import folium
 import numpy as np
@@ -236,15 +237,29 @@ def main():
         st.dataframe(resumen, use_container_width=True, height=300)
     
     with col_t2:
-        st.info("Descarga la base maestra para compartir con coordinadores.")
-        csv = gdf_view[['seccion', 'nombre_municipio', 'Supervisor_Global', 'encuestas_totales']].to_csv(index=False)
-        st.download_button(
-            label="⬇️ Descargar CSV",
-            data=csv,
-            file_name="logistica_guerrero_final.csv",
-            mime="text/csv",
-            type="primary"
-        )
+            st.info("Descargas y Reportes") # Texto actualizado
+            
+            # Botón 1: CSV
+            csv = gdf_view[['seccion', 'nombre_municipio', 'Supervisor_Global', 'encuestas_totales']].to_csv(index=False)
+            st.download_button(
+                label="⬇️ Descargar Asignación (.csv)",
+                data=csv,
+                file_name="logistica_guerrero_final.csv",
+                mime="text/csv",
+                type="primary"
+            )
+            
+            st.write("") # Espacio vacío visual
+            
+            # --- NUEVO: Botón 2: Mapa HTML ---
+            map_html = io.BytesIO()
+            m.save(map_html, close_file=False)
+            st.download_button(
+                label="🌍 Descargar Mapa Interactivo (.html)",
+                data=map_html.getvalue(),
+                file_name=f"mapa_logistica_{seleccion}.html",
+                mime="text/html"
+            )
     
     # --- NUEVO: NOTA METODOLÓGICA (AL PIE) ---
     st.markdown("---")
