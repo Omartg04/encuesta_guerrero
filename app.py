@@ -122,6 +122,7 @@ def procesar_todo_el_estado(gdf_global):
         return pd.concat(resultados)
     return gpd.GeoDataFrame()
 
+@st.cache_data
 def load_manzanas_optimizadas(municipio_key):
     """Carga las manzanas INEGI procesadas."""
     if municipio_key not in MANZANAS_FILES: return None
@@ -133,11 +134,21 @@ def load_manzanas_optimizadas(municipio_key):
         return gpd.read_file(path)
     except Exception: return None
 
-
 # --- 3. UI DASHBOARD ---
 
 def main():
     st.title("🗳️ Tablero de Mando Logístico - Guerrero")
+    # --- SELECTOR DE MODO (NUEVO) ---
+    modo=st.sidebar.radio(
+    "Modo de Visualización",
+    ["🗺️ Planeación (Sprint 1)", "🔮 Demo Monitoreo (Sprint 2)"],
+    index=0
+    )
+
+    # Lógica de desvío: Si selecciona Demo, muestra demo y DETIENE lo demás
+    if modo == "🔮 Demo Monitoreo (Sprint 2)":
+        render_demo_monitoreo()
+        return 
     
     gdf = get_data()
     if gdf is None: st.stop()
@@ -326,6 +337,101 @@ def main():
         2.  **📍 Proximidad Geográfica:** Una vez definida la cantidad de secciones, el algoritmo busca que estas sean **vecinas geográficas**. Se minimiza la distancia total que debe recorrer el equipo.
         3.  **📐 Precisión:** Se utiliza la proyección cartográfica `UTM Zona 14N` para realizar cálculos precisos en metros, evitando distorsiones por la curvatura de la tierra.
         """)
+# --- FUNCIÓN DEMO SPRINT 2 (DATOS SIMULADOS) ---
+def render_demo_monitoreo():
+    st.markdown("## 🔮 Previsualización: Módulo de Monitoreo (Sprint 2)")
+    st.info("⚠️ **Modo Demostración:** Los datos mostrados a continuación son simulados para visualizar las funcionalidades futuras de control de calidad y avance.")
+
+    # 1. GENERAR DATOS FALSOS (MOCK DATA)
+    # Simulamos avance en 20 secciones aleatorias
+    data_mock = []
+    import random
+    
+    supervisores = ["Ana G.", "Carlos M.", "Luis R.", "Sofia T."]
+    
+    for i in range(1, 21):
+        meta = random.randint(10, 40)
+        hechas = random.randint(0, meta + 5) # Algunas con sobre-muestra
+        avance = min(100, int((hechas/meta)*100))
+        
+        # Simular coordenadas para mapa de auditoría (Cerca de Iguala como ejemplo)
+        lat_base = 18.35
+        lon_base = -99.53
+        # Ruido aleatorio
+        lat = lat_base + random.uniform(-0.02, 0.02)
+        lon = lon_base + random.uniform(-0.02, 0.02)
+        
+        # Simular validación GPS (80% validas, 20% invalidas)
+        valid_gps = random.choice([True, True, True, True, False])
+        
+        data_mock.append({
+            "Sección": f"{1000+i}",
+            "Supervisor": random.choice(supervisores),
+            "Encuestador": f"Encuestador {random.randint(1,10)}",
+            "Meta": meta,
+            "Realizadas": hechas,
+            "Avance (%)": avance / 100, # Para formato de barra
+            "lat": lat,
+            "lon": lon,
+            "Status GPS": "✅ Válida" if valid_gps else "❌ Fuera de Zona"
+        })
+    
+    df_mock = pd.DataFrame(data_mock)
+
+    # --- VISUALIZACIÓN 1: BARRAS DE PROGRESO ---
+    st.subheader("1. Avance en Tiempo Real por Sección")
+    st.dataframe(
+        df_mock[["Sección", "Supervisor", "Meta", "Realizadas", "Avance (%)"]],
+        use_container_width=True,
+        column_config={
+            "Avance (%)": st.column_config.ProgressColumn(
+                "Progreso",
+                help="Avance respecto a la meta",
+                format="%.0f%%",
+                min_value=0,
+                max_value=1,
+            )
+        },
+        hide_index=True
+    )
+
+    # --- VISUALIZACIÓN 2: AUDITORÍA GPS ---
+    st.subheader("2. Auditoría de Coordenadas (GPS vs Asignación)")
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        # Usamos st.map para rápido, pintando puntos rojos y verdes
+        # Separamos validas e invalidas para color
+        # Nota: st.map es limitado con colores, para el demo rápido usaremos scatter_chart o pydeck es mejor,
+        # pero para HOY, usemos un truco visual simple con st.map coloreando por columna no es nativo facil.
+        # Mejor usamos un mapa de folium rápido.
+        
+        m_audit = folium.Map(location=[18.35, -99.53], zoom_start=13)
+        
+        for _, row in df_mock.iterrows():
+            color = "green" if row["Status GPS"] == "✅ Válida" else "red"
+            folium.CircleMarker(
+                location=[row["lat"], row["lon"]],
+                radius=6,
+                color=color,
+                fill=True,
+                fill_color=color,
+                popup=f"Encuestador: {row['Encuestador']}<br>Status: {row['Status GPS']}"
+            ).add_to(m_audit)
+            
+        st_folium(m_audit, height=400, use_container_width=True)
+        
+    with col2:
+        st.caption("Puntos Rojos indican encuestas realizadas fuera de la manzana asignada.")
+        st.metric("Encuestas Auditable", len(df_mock))
+        errores = len(df_mock[df_mock["Status GPS"] == "❌ Fuera de Zona"])
+        st.metric("Posibles Errores GPS", errores, delta=f"-{errores}", delta_color="inverse")
+
+    # --- VISUALIZACIÓN 3: PRODUCTIVIDAD ---
+    st.subheader("3. Productividad por Supervisor")
+    prod_df = df_mock.groupby("Supervisor")["Realizadas"].sum().reset_index().sort_values("Realizadas", ascending=False)
+    
+    st.bar_chart(prod_df, x="Supervisor", y="Realizadas", color="#3cb44b")
 
 if __name__ == "__main__":
     main()
