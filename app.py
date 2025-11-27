@@ -10,6 +10,7 @@ from scipy.spatial.distance import cdist
 from scipy.optimize import linear_sum_assignment
 from folium.plugins import Search, Fullscreen
 import os
+import time
 
 # --- 1. CONFIGURACIÓN Y ESTILOS ---
 st.set_page_config(
@@ -160,9 +161,12 @@ def main():
         seleccion = st.selectbox("Seleccionar Territorio", opciones_menu)
         
         es_global = seleccion == "VISTA GENERAL (TODOS)"
+
+        with st.spinner(f"🛰️ Desplazando vista satelital hacia {seleccion}..."):
+
+            time.sleep(0.7)
         
         if es_global:
-            st.info("🔄 Procesando todo el estado...")
             gdf_view = procesar_todo_el_estado(gdf)
             total_supervisores = sum(SUPERVISORES_CONFIG.values())
         else:
