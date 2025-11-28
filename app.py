@@ -4,8 +4,9 @@ from streamlit_folium import st_folium
 from folium.plugins import Search, Fullscreen
 import io
 import time
+import geopandas as gpd  # <--- ¡AGREGA ESTA LÍNEA!
 
-# Importaciones Modulares (Refactorización)
+# Importaciones Modulares
 from src.config import MUNICIPIOS_MAP, SUPERVISORES_CONFIG, COLORS
 from src.loader import get_data, load_manzanas_optimizadas
 from src.logic import balanced_cluster_optimization, procesar_todo_el_estado
