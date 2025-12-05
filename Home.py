@@ -11,7 +11,7 @@ st.set_page_config(
 st.title("🗳️ Centro de Mando Logístico - Guerrero")
 
 st.markdown("""
-### Bienvenido al Sistema de Inteligencia Territorial
+### Bienvenido al Sistema de Inteligencia Territorial Encuesta Diciembre 2025
 
 Selecciona un módulo en el menú lateral para comenzar:
 
@@ -23,15 +23,16 @@ Selecciona un módulo en el menú lateral para comenzar:
     * Filtro operativo por supervisor.
     * Descarga de rutas y mapas (Manzanas INEGI).
 
-#### 📊 2. Monitoreo y Auditoría (En Construcción)
+#### 📊 2. Monitoreo y Auditoría 
 * **Objetivo:** Seguimiento en tiempo real del levantamiento de campo.
-* **Funcionalidades (Próximamente):**
+* **Funcionalidades:**
     * Auditoría de coordenadas GPS (Geo-Fencing).
     * Barras de avance vs Meta.
     * Productividad por encuestador.
+    * Secciones críticas
 
 ---
-*v1.0 - Sprint 2*
+*v2.0 - Sprint 2* Data & AI Inclusion Tech
 """)
 
 # Sidebar informativo
