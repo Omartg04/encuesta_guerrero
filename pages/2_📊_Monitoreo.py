@@ -204,7 +204,7 @@ def main():
 
     df_rezago['Estatus'] = df_rezago.apply(clasificar_status, axis=1)
     
-    cols_mostrar = ['nombre_municipio', 'seccion_electoral', 'encuestas_totales', 'realizadas', 'porcentaje', 'Estatus']
+    cols_mostrar = ['nombre_municipio', 'seccion', 'encuestas_totales', 'realizadas', 'porcentaje', 'Estatus']
     df_rezago = df_rezago.sort_values(by=['porcentaje', 'realizadas'], ascending=[True, True])
 
     # Métricas de Alerta
@@ -225,7 +225,7 @@ def main():
         use_container_width=True,
         column_config={
             "nombre_municipio": "Municipio",
-            "seccion_electoral": "Sección",
+            "seccion": "Sección",
             "encuestas_totales": "Meta",
             "realizadas": "Hechas",
             "porcentaje": st.column_config.ProgressColumn(
