@@ -299,7 +299,7 @@ def main():
                 "Avance %",
                 format="%.1f%%",
                 min_value=0,
-                max_value=1, # Ajusta a 100 porque calculamos porcentaje * 100 antes, o quita el *100 en audit.py y usa max_value=1
+                max_value=100, # Ajusta a 100 porque calculamos porcentaje * 100 antes, o quita el *100 en audit.py y usa max_value=1
             ),
             "Estatus": st.column_config.TextColumn(
                 "Estado",
