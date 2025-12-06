@@ -13,7 +13,7 @@ from src.logic import balanced_cluster_optimization
 from src.audit import procesar_auditoria_gps, calcular_avance_global
 
 st.set_page_config(page_title="Monitoreo de Campo", layout="wide")
-
+bloquear_acceso()
 def main():
     st.title("📊 Centro de Monitoreo y Auditoría")
 

@@ -51,21 +51,19 @@ def procesar_auditoria_gps(df_bubble, gdf_secciones):
 
 def calcular_avance_global(df_bubble, gdf_metas):
     """
-    Suma TODAS las encuestas (con y sin GPS) para el avance.
-    CORRECCIÓN: Fuerza tipos de datos str en AMBOS lados antes del merge.
+    Suma TODAS las encuestas y calcula porcentaje en escala 0-100.
     """
-    # 1. Asegurar que Bubble sea String (limpiando posibles .0)
+    # 1. Asegurar Strings
     df_bubble = df_bubble.copy()
     df_bubble['seccion_electoral'] = df_bubble['seccion_electoral'].astype(str).str.replace(r'\.0$', '', regex=True)
     
-    # 2. Asegurar que Metas sea String
     gdf_metas = gdf_metas.copy()
     gdf_metas['KEY_JOIN'] = gdf_metas['KEY_JOIN'].astype(str)
     
-    # 3. Agrupar conteos
+    # 2. Agrupar
     conteo = df_bubble.groupby('seccion_electoral').size().reset_index(name='realizadas')
     
-    # 4. Merge seguro (String vs String)
+    # 3. Merge
     df_avance = gdf_metas.merge(
         conteo, 
         left_on='KEY_JOIN', 
@@ -73,11 +71,12 @@ def calcular_avance_global(df_bubble, gdf_metas):
         how='left'
     )
     
-    # 5. Cálculos finales
+    # 4. Cálculos
     df_avance['realizadas'] = df_avance['realizadas'].fillna(0)
-    # Evitar división por cero o nulos
     df_avance['encuestas_totales'] = df_avance['encuestas_totales'].fillna(1) 
     
-    df_avance['porcentaje'] = (df_avance['realizadas'] / df_avance['encuestas_totales'])
+    # --- CORRECCIÓN CRÍTICA: Multiplicar por 100 ---
+    # Esto convierte 1.16 en 116.6
+    df_avance['porcentaje'] = (df_avance['realizadas'] / df_avance['encuestas_totales']) * 100
     
     return df_avance
