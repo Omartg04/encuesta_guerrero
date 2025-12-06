@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import geopandas as gpd
 import folium
-import altair as alt # Para gráficas bonitas
+import altair as alt 
 from streamlit_folium import st_folium
 import os
 
@@ -17,13 +17,13 @@ st.set_page_config(page_title="Monitoreo de Campo", layout="wide")
 def main():
     st.title("📊 Centro de Monitoreo y Auditoría")
 
-    # --- 1. CARGA Y PREPARACIÓN DE DATOS MAESTROS ---
+    # --- 1. CARGA Y PREPARACIÓN ---
     with st.spinner("Sincronizando datos operativos..."):
-        # A. Cargar Metas (Shapefile + Muestra)
+        # A. Cargar Metas
         gdf_raw = get_data()
         if gdf_raw is None: st.stop()
 
-        # B. Recalcular Supervisores (Para tener el filtro disponible)
+        # B. Recalcular Supervisores para filtros
         gdf_list = []
         for muni, nombre_oficial in MUNICIPIOS_MAP.items():
             temp = gdf_raw[gdf_raw['nombre_municipio'].str.upper() == nombre_oficial.upper()].copy()
@@ -36,7 +36,6 @@ def main():
         gdf_maestro = pd.concat(gdf_list) 
 
         # C. Cargar Datos de Campo (Bubble Limpio)
-        # Apuntamos al archivo procesado por el ETL
         path_bubble = "data/processed/bubble_clean.csv"
         
         if not os.path.exists(path_bubble):
@@ -45,20 +44,17 @@ def main():
             
         df_bubble = pd.read_csv(path_bubble)
 
-    # --- 2. FILTROS (SIDEBAR) ---
+    # --- 2. FILTROS SIDEBAR ---
     with st.sidebar:
-        # Botón de recarga manual para limpiar caché si se actualizó el CSV
         if st.button("🔄 Recargar Datos"):
             st.cache_data.clear()
             st.rerun()
             
         st.header("Nivel de Visualización")
         
-        # Filtro 1: Territorio
         opciones_terr = ["TODO EL ESTADO"] + list(MUNICIPIOS_MAP.keys())
         seleccion_terr = st.selectbox("Territorio", opciones_terr)
         
-        # Filtro 2: Supervisor (Solo si hay municipio seleccionado)
         seleccion_sup = "Todos"
         if seleccion_terr != "TODO EL ESTADO":
             nombre_oficial = MUNICIPIOS_MAP[seleccion_terr]
@@ -66,9 +62,9 @@ def main():
             opciones_sup = ["Todos"] + list(ids_sups)
             seleccion_sup = st.selectbox("Supervisor", opciones_sup)
 
-    # --- 3. FILTRADO DE DATOS (CASCADA) ---
+    # --- 3. FILTRADO DE DATOS ---
     
-    # Paso A: Filtrar el Maestro (Metas)
+    # A. Filtrar Maestro
     gdf_view = gdf_maestro.copy()
     if seleccion_terr != "TODO EL ESTADO":
         nombre_oficial = MUNICIPIOS_MAP[seleccion_terr]
@@ -77,159 +73,103 @@ def main():
         if seleccion_sup != "Todos":
             gdf_view = gdf_view[gdf_view['Supervisor_ID'] == seleccion_sup]
 
-    # Paso B: Filtrar lo Realizado (Bubble) para que coincida con la vista
+    # B. Filtrar Realizado
     secciones_validas = gdf_view['KEY_JOIN'].astype(str).tolist()
-    # Aseguramos tipos compatibles en bubble también
     df_bubble['seccion_str'] = df_bubble['seccion_electoral'].astype(str).str.replace(".0", "", regex=False)
     df_bubble_view = df_bubble[df_bubble['seccion_str'].isin(secciones_validas)].copy()
 
-    # --- 4. CÁLCULOS SOBRE VISTA FILTRADA ---
+    # --- 4. CÁLCULOS ---
     
-    # Auditoría GPS 
     gdf_auditado = procesar_auditoria_gps(df_bubble_view, gdf_view)
-    
-    # Avance Global 
     df_avance = calcular_avance_global(df_bubble_view, gdf_view)
 
-# --- 5. KPIs (TOP BAR) ---
+    # --- 5. KPIs ---
     total_meta = df_avance['encuestas_totales'].sum()
     total_real = len(df_bubble_view)
     pct_global = (total_real / total_meta) if total_meta > 0 else 0
     
-    # CÁLCULOS DE ESTATUS SECCIONAL
-    total_secciones = len(df_avance)
-    # Secciones iniciadas (tienen al menos 1 encuesta)
+    # Estatus Seccional
     sec_iniciadas = len(df_avance[df_avance['realizadas'] > 0])
-    # Secciones completas (ya llegaron o superaron su meta)
+    # Consideramos completa si realizadas >= totales
     sec_completas = len(df_avance[df_avance['realizadas'] >= df_avance['encuestas_totales']])
-    
-    # Calcular restantes para cerrar
-    sec_pendientes = total_secciones - sec_completas
+    sec_pendientes = len(df_avance) - sec_completas
 
-    # Métricas de Calidad
+    # Calidad GPS
     sin_gps = len(gdf_auditado[gdf_auditado['auditoria'] == "⚠️ Sin GPS"])
     fuera_zona = len(gdf_auditado[gdf_auditado['auditoria'] == "❌ Fuera de Zona"])
     con_gps = total_real - sin_gps
 
     k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Avance Encuestas", f"{total_real} / {total_meta}", f"{pct_global:.1%}")
+    k2.metric("Secciones Terminadas", f"{sec_completas} / {len(df_avance)}", f"-{sec_pendientes} pendientes", delta_color="normal")
+    k3.metric("Alertas GPS", fuera_zona, delta="Revisar" if fuera_zona > 0 else "OK", delta_color="inverse")
     
-    # KPI 1: Avance Global (Encuestas)
-    k1.metric(
-        "Avance Encuestas", 
-        f"{total_real} / {total_meta}", 
-        f"{pct_global:.1%}"
-    )
-    
-    # KPI 2: SECCIONES COMPLETAS (NUEVO)
-    k2.metric(
-        "Secciones Terminadas", 
-        f"{sec_completas} / {total_secciones}", 
-        f"-{sec_pendientes} pendientes", # Delta negativo muestra cuánto falta
-        delta_color="normal"
-    )
-    
-    # KPI 3: Calidad GPS
-    k3.metric(
-        "Alertas GPS (Fuera Zona)", 
-        fuera_zona, 
-        delta="Revisar" if fuera_zona > 0 else "OK", 
-        delta_color="inverse"
-    )
-    
-    # KPI 4: Productividad
-    n_encuestadores = df_bubble_view['id_encuestador'].nunique()
-    prom_prod = int(total_real / n_encuestadores) if n_encuestadores > 0 else 0
-    k4.metric(
-        "Fuerza de Tarea", 
-        f"{n_encuestadores} activos", 
-        f"~{prom_prod} enc/prom"
-    )
+    n_enc = df_bubble_view['id_encuestador'].nunique()
+    prom = int(total_real / n_enc) if n_enc > 0 else 0
+    k4.metric("Fuerza de Tarea", f"{n_enc} activos", f"~{prom} enc/prom")
 
     st.divider()
-    # --- 6. VISUALIZACIÓN INTELIGENTE (DRILL-DOWN) ---
+
+    # --- 6. GRÁFICAS Y MAPAS ---
     
     col_grafica, col_mapa = st.columns([1, 1])
 
     with col_grafica:
         st.subheader("📈 Desglose de Avance")
         
-        # Lógica de Drill-down
         if seleccion_terr == "TODO EL ESTADO":
-            dimension = 'nombre_municipio'
-            titulo_eje = "Municipio"
+            dim = 'nombre_municipio'; tit = "Municipio"
         elif seleccion_sup == "Todos":
-            dimension = 'Supervisor_Label' 
-            titulo_eje = "Grupo Supervisor"
+            dim = 'Supervisor_Label'; tit = "Grupo Supervisor"
         else:
-            dimension = 'seccion' # O KEY_JOIN
-            titulo_eje = "Sección Electoral"
+            dim = 'seccion'; tit = "Sección Electoral"
 
-        # Agrupación dinámica
-        chart_data = df_avance.groupby(dimension).agg({
-            'realizadas': 'sum',
-            'encuestas_totales': 'sum'
-        }).reset_index()
-        
+        chart_data = df_avance.groupby(dim).agg({'realizadas': 'sum', 'encuestas_totales': 'sum'}).reset_index()
         chart_data['Avance %'] = chart_data['realizadas'] / chart_data['encuestas_totales']
 
-        # Gráfica Altair
         base = alt.Chart(chart_data).encode(
-            y=alt.Y(f'{dimension}:N', sort='-x', title=titulo_eje),
-            tooltip=[dimension, 'realizadas', 'encuestas_totales', alt.Tooltip('Avance %', format='.1%')]
+            y=alt.Y(f'{dim}:N', sort='-x', title=tit),
+            tooltip=[dim, 'realizadas', 'encuestas_totales', alt.Tooltip('Avance %', format='.1%')]
         )
+        barras = base.mark_bar(color='#eee').encode(x='encuestas_totales:Q') + \
+                 base.mark_bar(color='#3cb44b').encode(x='realizadas:Q')
+        texto = base.mark_text(align='left', dx=2).encode(x='realizadas:Q', text=alt.Text('Avance %', format='.0%'))
 
-        barras_meta = base.mark_bar(color='#eee').encode(x='encuestas_totales:Q')
-        barras_real = base.mark_bar(color='#3cb44b').encode(x='realizadas:Q')
-        
-        texto = base.mark_text(align='left', dx=2).encode(
-            x='realizadas:Q', 
-            text=alt.Text('Avance %', format='.0%')
-        )
+        st.altair_chart((barras + texto), use_container_width=True)
 
-        st.altair_chart((barras_meta + barras_real + texto), use_container_width=True)
-
-        with st.expander("🏆 Ranking de Encuestadores (En esta zona)"):
+        with st.expander("🏆 Ranking de Encuestadores"):
             ranking = df_bubble_view['id_encuestador'].value_counts().reset_index()
             ranking.columns = ['ID', 'Encuestas']
             st.dataframe(ranking, use_container_width=True, height=200)
 
     with col_mapa:
         st.subheader("📍 Auditoría Geoespacial")
-        
-        # Filtro de puntos visual
         ver_errores = st.toggle("Ver solo errores GPS", value=False)
         
-        # PREPARAR DATOS PARA EL MAPA
         if ver_errores:
             puntos_mapa = gdf_auditado[gdf_auditado['auditoria'] == "❌ Fuera de Zona"]
         else:
-            # Mostramos válidas y errores (excluyendo las que no tienen GPS)
             puntos_mapa = gdf_auditado[gdf_auditado['auditoria'].isin(["✅ Válida", "❌ Fuera de Zona"])]
 
-        # --- FILTRO CRÍTICO ANTI-ERROR ---
-        # Eliminamos filas que tengan NaN en lat/lon antes de pasarlas a Folium
+        # FILTRO DE SEGURIDAD PARA FOLIUM (Evita error NaNs)
         puntos_mapa = puntos_mapa.dropna(subset=['latitud', 'longitud'])
-        # ---------------------------------
 
-        # Mapa base
         lat = gdf_view.geometry.centroid.y.mean()
         lon = gdf_view.geometry.centroid.x.mean()
         zoom = 9 if seleccion_terr == "TODO EL ESTADO" else (12 if seleccion_sup == "Todos" else 14)
 
         m = folium.Map([lat, lon], zoom_start=zoom, tiles="CartoDB positron")
 
-        # Capa Polígonos (Metas)
         folium.GeoJson(
             gdf_view,
             style_function=lambda x: {'fillColor': '#999', 'color': '#666', 'weight': 1, 'fillOpacity': 0.1},
-            tooltip=folium.GeoJsonTooltip(['seccion', 'encuestas_totales'], aliases=['Sección:', 'Meta:'])
+            tooltip=folium.GeoJsonTooltip(['seccion'])
         ).add_to(m)
 
-        # Capa Puntos (Realizado)
-        limit_points = 2000 
-        if len(puntos_mapa) > limit_points:
-            st.caption(f"⚠️ Mostrando solo los últimos {limit_points} puntos con GPS.")
-            puntos_mapa = puntos_mapa.head(limit_points)
+        limit = 2000
+        if len(puntos_mapa) > limit:
+            st.caption(f"⚠️ Mostrando últimos {limit} puntos.")
+            puntos_mapa = puntos_mapa.head(limit)
 
         for _, row in puntos_mapa.iterrows():
             c = "red" if row['auditoria'] == "❌ Fuera de Zona" else "#00c853"
@@ -241,69 +181,47 @@ def main():
 
         st_folium(m, height=550, use_container_width=True)
 
-# ... (Después de st_folium y las columnas anteriores) ...
-
+    # --- 7. SEMÁFORO DE REZAGO (AL FINAL) ---
     st.markdown("---")
     st.subheader("🚨 Semáforo de Rezago Seccional")
     
-    # 1. PREPARACIÓN DE DATOS
-    # Filtramos columnas útiles y ordenamos por menor avance
     df_rezago = df_avance.copy()
     
-    # Clasificación de Status para facilitar lectura
-# 1. LÓGICA DEL SEMÁFORO (Ajustada a escala 0-100)
+    # --- PARCHE DE SEGURIDAD DE ESCALA ---
+    # Si detectamos que los datos vienen en decimales pequeños (ej. promedio < 5),
+    # asumimos escala 0-1 y multiplicamos por 100 para estandarizar a escala 0-100.
+    if df_rezago['porcentaje'].mean() < 5:
+        df_rezago['porcentaje'] = df_rezago['porcentaje'] * 100
+    # -------------------------------------
+
+    # Clasificación de Status (Escala 0-100)
     def clasificar_status(row):
-        val = row['porcentaje'] # Aquí esperamos valores como 15.5, 50.0, 116.0
-        
-        # Prioridad 1: Cero absoluto
-        if row['realizadas'] == 0: 
-            return "🔴 Sin Iniciar"
-            
-        # Prioridad 2: Rezago Crítico (Menos del 30%)
-        if val < 30: 
-            return "🟠 Rezago Crítico"
-            
-        # Prioridad 3: En Proceso (Del 30% al 99.9%)
-        # Cambiamos 80 por 100 para que solo se ponga verde si YA TERMINÓ
-        if val < 100: 
-            return "🟡 En Proceso"
-            
-        # Prioridad 4: Completada (100% o más)
-        # Aquí caen las de 100%, 116%, etc.
-        return "🟢 Completada"
+        val = row['porcentaje']
+        if row['realizadas'] == 0: return "🔴 Sin Iniciar"
+        if val < 30: return "🟠 Rezago Crítico"
+        if val < 100: return "🟡 En Proceso"
+        return "🟢 Completada" # >= 100%
 
     df_rezago['Estatus'] = df_rezago.apply(clasificar_status, axis=1)
     
-    # Seleccionar columnas para mostrar
     cols_mostrar = ['nombre_municipio', 'seccion_electoral', 'encuestas_totales', 'realizadas', 'porcentaje', 'Estatus']
-    
-    # Ordenar: Primero las de 0%, luego las de menor porcentaje
     df_rezago = df_rezago.sort_values(by=['porcentaje', 'realizadas'], ascending=[True, True])
 
-    # 2. MÉTRICAS DE ALERTA
-    secciones_cero = len(df_rezago[df_rezago['realizadas'] == 0])
-    secciones_criticas = len(df_rezago[(df_rezago['porcentaje'] < 30) & (df_rezago['realizadas'] > 0)])
+    # Métricas de Alerta
+    cero = len(df_rezago[df_rezago['realizadas'] == 0])
+    lento = len(df_rezago[(df_rezago['porcentaje'] < 30) & (df_rezago['realizadas'] > 0)])
     
-    col_alerta1, col_alerta2, col_descarga = st.columns([1, 1, 2])
-    col_alerta1.metric("🔴 Secciones en Cero", secciones_cero, help="No se ha levantado ninguna encuesta")
-    col_alerta2.metric("🟠 Avance Lento (<30%)", secciones_criticas, help="Secciones iniciadas pero muy atrasadas")
+    c1, c2, c3 = st.columns([1, 1, 2])
+    c1.metric("🔴 En Cero", cero)
+    c2.metric("🟠 Lentos (<30%)", lento)
     
-    with col_descarga:
-        st.write("") # Espacio para alinear
-        # Botón para descargar reporte de rezago para coordinadores
-        csv_rezago = df_rezago[cols_mostrar].to_csv(index=False)
-        st.download_button(
-            "⬇️ Descargar Reporte de Focos Rojos (.csv)",
-            csv_rezago,
-            "reporte_rezago_diario.csv",
-            "text/csv",
-            type="primary"
-        )
+    with c3:
+        st.write("")
+        csv = df_rezago[cols_mostrar].to_csv(index=False)
+        st.download_button("⬇️ Descargar Reporte Focos Rojos", csv, "rezago.csv", "text/csv", type="primary")
 
-    # 3. TABLA VISUAL DE REZAGO
-    # Mostramos las top 50 peores para no saturar
     st.dataframe(
-        df_rezago[cols_mostrar].head(50),
+        df_rezago[cols_mostrar].head(100),
         use_container_width=True,
         column_config={
             "nombre_municipio": "Municipio",
@@ -312,14 +230,11 @@ def main():
             "realizadas": "Hechas",
             "porcentaje": st.column_config.ProgressColumn(
                 "Avance %",
-                format="%.1f%%",
+                format="%.1f%%", # Muestra 125.0%
                 min_value=0,
-                max_value=100, # Ajusta a 100 porque calculamos porcentaje * 100 antes, o quita el *100 en audit.py y usa max_value=1
+                max_value=100,
             ),
-            "Estatus": st.column_config.TextColumn(
-                "Estado",
-                help="🔴=0, 🟠<30%, 🟡<80%, 🟢>80%",
-            )
+            "Estatus": st.column_config.TextColumn("Estado")
         },
         hide_index=True
     )
