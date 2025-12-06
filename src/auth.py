@@ -1,18 +1,26 @@
 import streamlit as st
 import streamlit_authenticator as stauth
+import copy # <--- IMPORTANTE: Necesario para la solución
 
 def bloquear_acceso():
     """
-    Función de bloqueo. 
-    Si el usuario NO está logueado -> Muestra Login y detiene la app.
-    Si el usuario SÍ está logueado -> Muestra botón Logout y deja pasar.
+    Función de bloqueo con corrección para Logout.
     """
     # 1. Cargar configuración
     if 'credentials' not in st.secrets:
         st.error("Error: No se configuraron secretos (.streamlit/secrets.toml)")
         st.stop()
 
-    dict_credentials = dict(st.secrets['credentials'])
+    # --- CORRECCIÓN CRÍTICA ---
+    # st.secrets es inmutable (solo lectura).
+    # Usamos deepcopy para crear una copia completa y editable de las credenciales.
+    # Esto permite que la librería modifique el estado 'logged_in' sin error.
+    try:
+        dict_credentials = copy.deepcopy(dict(st.secrets['credentials']))
+    except Exception as e:
+        st.error(f"Error procesando credenciales: {e}")
+        st.stop()
+    # --------------------------
     
     # 2. Inicializar Autenticador
     authenticator = stauth.Authenticate(
@@ -23,23 +31,20 @@ def bloquear_acceso():
     )
 
     # 3. Renderizar Widget de Login
-    # (El widget maneja la UI automáticamente)
     authenticator.login()
 
     # 4. Verificar Estado
     if st.session_state["authentication_status"]:
-        # CASO: ÉXITO
         with st.sidebar:
-            st.success(f"Hola, {st.session_state['name']}")
+            st.write(f"👤 **{st.session_state['name']}**")
+            # El botón de logout ahora modificará 'dict_credentials' (la copia), no 'st.secrets'
             authenticator.logout('Cerrar Sesión', 'sidebar')
-        return True # Deja pasar
+        return True 
         
     elif st.session_state["authentication_status"] is False:
-        # CASO: CONTRASEÑA MAL
         st.error("Usuario o contraseña incorrectos")
-        st.stop() # Detiene la ejecución
+        st.stop()
         
     elif st.session_state["authentication_status"] is None:
-        # CASO: AÚN NO INTENTA ENTRAR
         st.warning("🔒 Esta sección es privada. Inicia sesión para ver el monitoreo.")
-        st.stop() # Detiene la ejecución para que no se vea el mapa de fondo
+        st.stop()
