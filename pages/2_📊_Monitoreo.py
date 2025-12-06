@@ -187,9 +187,21 @@ def main():
     
     df_rezago = df_avance.copy()
     
-    # Parche de escala (0-1 a 0-100)
+    # --- PARCHE DE SEGURIDAD DE ESCALA ---
     if df_rezago['porcentaje'].mean() < 5:
         df_rezago['porcentaje'] = df_rezago['porcentaje'] * 100
+
+    # --- NUEVO: GARANTÍA DE ETIQUETA DE SUPERVISOR ---
+    # Creamos una columna limpia 'Supervisor' combinando Municipio y ID
+    # Esto asegura que siempre diga "IGU-1" en lugar de solo "1" o datos raros
+    try:
+        df_rezago['Supervisor'] = df_rezago.apply(
+            lambda x: f"{str(x['nombre_municipio'])[:3].upper()}-{int(x['Supervisor_ID'])}", 
+            axis=1
+        )
+    except:
+        # Fallback por si algo raro pasa con los datos
+        df_rezago['Supervisor'] = "N/A"
 
     # Clasificación de Status
     def clasificar_status(row):
@@ -201,12 +213,8 @@ def main():
 
     df_rezago['Estatus'] = df_rezago.apply(clasificar_status, axis=1)
     
-    # 1. ACTUALIZACIÓN DE COLUMNAS: Agregamos 'Supervisor_Label'
-    # Nota: Asegúrate de que 'Supervisor_Label' exista en tu df_avance (viene desde el merge con gdf_view)
-    # Si por algo no está, usa 'Supervisor_ID'
-    columna_sup = 'Supervisor_Label' if 'Supervisor_Label' in df_rezago.columns else 'Supervisor_ID'
-    
-    cols_mostrar = ['nombre_municipio', columna_sup, 'seccion', 'encuestas_totales', 'realizadas', 'porcentaje', 'Estatus']
+    # COLUMNAS FINALES LIMPIAS
+    cols_mostrar = ['nombre_municipio', 'Supervisor', 'seccion', 'encuestas_totales', 'realizadas', 'porcentaje', 'Estatus']
     
     # Ordenar: Prioridad a las vacías y las lentas
     df_rezago = df_rezago.sort_values(by=['porcentaje', 'realizadas'], ascending=[True, True])
@@ -222,8 +230,7 @@ def main():
     with c3:
         st.write("")
         
-        # 2. FILTRO PARA DESCARGA: Solo pendientes (<100%)
-        # Excluimos las que ya están "🟢 Completada" o tienen 100% o más
+        # FILTRO PARA DESCARGA: Solo pendientes (<100%)
         df_pendientes = df_rezago[df_rezago['porcentaje'] < 100].copy()
         
         csv = df_pendientes[cols_mostrar].to_csv(index=False)
@@ -236,13 +243,13 @@ def main():
             help="Descarga solo las secciones que no han llegado a la meta."
         )
 
-    # Tabla Visual (Aquí sí mostramos todo para contexto, o puedes usar df_pendientes si prefieres)
+    # Tabla Visual
     st.dataframe(
         df_rezago[cols_mostrar].head(100),
         use_container_width=True,
         column_config={
             "nombre_municipio": "Municipio",
-            columna_sup: "Supervisor", # Etiqueta amigable
+            "Supervisor": "Supervisor", # Ahora usamos la columna limpia creada arriba
             "seccion": "Sección",
             "encuestas_totales": "Meta",
             "realizadas": "Hechas",
@@ -256,6 +263,5 @@ def main():
         },
         hide_index=True
     )
-
 if __name__ == "__main__":
     main()
