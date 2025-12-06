@@ -11,9 +11,14 @@ from src.config import MUNICIPIOS_MAP, SUPERVISORES_CONFIG, COLORS
 from src.loader import get_data
 from src.logic import balanced_cluster_optimization
 from src.audit import procesar_auditoria_gps, calcular_avance_global
+from src.auth import bloquear_acceso  # <--- ¡ESTA ES LA LÍNEA QUE FALTABA!
 
 st.set_page_config(page_title="Monitoreo de Campo", layout="wide")
-bloquear_acceso()
+
+# --- CANDADO DE SEGURIDAD ---
+# Esto detiene la carga si el usuario no se loguea
+bloquear_acceso() 
+
 def main():
     st.title("📊 Centro de Monitoreo y Auditoría")
 
@@ -23,7 +28,7 @@ def main():
         gdf_raw = get_data()
         if gdf_raw is None: st.stop()
 
-        # B. Recalcular Supervisores para filtros
+        # B. Recalcular Supervisores
         gdf_list = []
         for muni, nombre_oficial in MUNICIPIOS_MAP.items():
             temp = gdf_raw[gdf_raw['nombre_municipio'].str.upper() == nombre_oficial.upper()].copy()
@@ -89,8 +94,6 @@ def main():
     pct_global = (total_real / total_meta) if total_meta > 0 else 0
     
     # Estatus Seccional
-    sec_iniciadas = len(df_avance[df_avance['realizadas'] > 0])
-    # Consideramos completa si realizadas >= totales
     sec_completas = len(df_avance[df_avance['realizadas'] >= df_avance['encuestas_totales']])
     sec_pendientes = len(df_avance) - sec_completas
 
@@ -151,7 +154,7 @@ def main():
         else:
             puntos_mapa = gdf_auditado[gdf_auditado['auditoria'].isin(["✅ Válida", "❌ Fuera de Zona"])]
 
-        # FILTRO DE SEGURIDAD PARA FOLIUM (Evita error NaNs)
+        # FILTRO DE SEGURIDAD PARA FOLIUM
         puntos_mapa = puntos_mapa.dropna(subset=['latitud', 'longitud'])
 
         lat = gdf_view.geometry.centroid.y.mean()
@@ -181,29 +184,25 @@ def main():
 
         st_folium(m, height=550, use_container_width=True)
 
-# --- 7. SEMÁFORO DE REZAGO (AL FINAL) ---
+    # --- 7. SEMÁFORO DE REZAGO ---
     st.markdown("---")
     st.subheader("🚨 Semáforo de Rezago Seccional")
     
     df_rezago = df_avance.copy()
     
-    # --- PARCHE DE SEGURIDAD DE ESCALA ---
+    # PARCHE DE SEGURIDAD DE ESCALA
     if df_rezago['porcentaje'].mean() < 5:
         df_rezago['porcentaje'] = df_rezago['porcentaje'] * 100
 
-    # --- NUEVO: GARANTÍA DE ETIQUETA DE SUPERVISOR ---
-    # Creamos una columna limpia 'Supervisor' combinando Municipio y ID
-    # Esto asegura que siempre diga "IGU-1" en lugar de solo "1" o datos raros
+    # GARANTÍA DE ETIQUETA DE SUPERVISOR
     try:
         df_rezago['Supervisor'] = df_rezago.apply(
             lambda x: f"{str(x['nombre_municipio'])[:3].upper()}-{int(x['Supervisor_ID'])}", 
             axis=1
         )
     except:
-        # Fallback por si algo raro pasa con los datos
         df_rezago['Supervisor'] = "N/A"
 
-    # Clasificación de Status
     def clasificar_status(row):
         val = row['porcentaje']
         if row['realizadas'] == 0: return "🔴 Sin Iniciar"
@@ -213,13 +212,9 @@ def main():
 
     df_rezago['Estatus'] = df_rezago.apply(clasificar_status, axis=1)
     
-    # COLUMNAS FINALES LIMPIAS
     cols_mostrar = ['nombre_municipio', 'Supervisor', 'seccion', 'encuestas_totales', 'realizadas', 'porcentaje', 'Estatus']
-    
-    # Ordenar: Prioridad a las vacías y las lentas
     df_rezago = df_rezago.sort_values(by=['porcentaje', 'realizadas'], ascending=[True, True])
 
-    # Métricas de Alerta
     cero = len(df_rezago[df_rezago['realizadas'] == 0])
     lento = len(df_rezago[(df_rezago['porcentaje'] < 30) & (df_rezago['realizadas'] > 0)])
     
@@ -229,27 +224,22 @@ def main():
     
     with c3:
         st.write("")
-        
-        # FILTRO PARA DESCARGA: Solo pendientes (<100%)
         df_pendientes = df_rezago[df_rezago['porcentaje'] < 100].copy()
-        
         csv = df_pendientes[cols_mostrar].to_csv(index=False)
         st.download_button(
             label=f"⬇️ Descargar Pendientes ({len(df_pendientes)} secciones)", 
             data=csv, 
             file_name="reporte_rezago_operativo.csv", 
             mime="text/csv", 
-            type="primary",
-            help="Descarga solo las secciones que no han llegado a la meta."
+            type="primary"
         )
 
-    # Tabla Visual
     st.dataframe(
         df_rezago[cols_mostrar].head(100),
         use_container_width=True,
         column_config={
             "nombre_municipio": "Municipio",
-            "Supervisor": "Supervisor", # Ahora usamos la columna limpia creada arriba
+            "Supervisor": "Supervisor", 
             "seccion": "Sección",
             "encuestas_totales": "Meta",
             "realizadas": "Hechas",
@@ -263,5 +253,6 @@ def main():
         },
         hide_index=True
     )
+
 if __name__ == "__main__":
     main()
