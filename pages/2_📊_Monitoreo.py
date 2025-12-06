@@ -251,10 +251,25 @@ def main():
     df_rezago = df_avance.copy()
     
     # Clasificación de Status para facilitar lectura
+# 1. LÓGICA DEL SEMÁFORO (Ajustada a escala 0-100)
     def clasificar_status(row):
-        if row['realizadas'] == 0: return "🔴 Sin Iniciar"
-        if row['porcentaje'] < 30: return "🟠 Rezago Crítico"
-        if row['porcentaje'] < 80: return "🟡 En Proceso"
+        val = row['porcentaje'] # Aquí esperamos valores como 15.5, 50.0, 116.0
+        
+        # Prioridad 1: Cero absoluto
+        if row['realizadas'] == 0: 
+            return "🔴 Sin Iniciar"
+            
+        # Prioridad 2: Rezago Crítico (Menos del 30%)
+        if val < 30: 
+            return "🟠 Rezago Crítico"
+            
+        # Prioridad 3: En Proceso (Del 30% al 99.9%)
+        # Cambiamos 80 por 100 para que solo se ponga verde si YA TERMINÓ
+        if val < 100: 
+            return "🟡 En Proceso"
+            
+        # Prioridad 4: Completada (100% o más)
+        # Aquí caen las de 100%, 116%, etc.
         return "🟢 Completada"
 
     df_rezago['Estatus'] = df_rezago.apply(clasificar_status, axis=1)
