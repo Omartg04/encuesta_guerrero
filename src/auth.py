@@ -1,28 +1,33 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-import copy # <--- IMPORTANTE: Necesario para la solución
 
 def bloquear_acceso():
     """
-    Función de bloqueo con corrección para Logout.
+    Función de bloqueo segura.
+    Crea una copia manual de las credenciales para evitar errores de inmutabilidad y recursión.
     """
-    # 1. Cargar configuración
+    # 1. Validar que existan los secretos
     if 'credentials' not in st.secrets:
         st.error("Error: No se configuraron secretos (.streamlit/secrets.toml)")
         st.stop()
 
-    # --- CORRECCIÓN CRÍTICA ---
-    # st.secrets es inmutable (solo lectura).
-    # Usamos deepcopy para crear una copia completa y editable de las credenciales.
-    # Esto permite que la librería modifique el estado 'logged_in' sin error.
-    try:
-        dict_credentials = copy.deepcopy(dict(st.secrets['credentials']))
-    except Exception as e:
-        st.error(f"Error procesando credenciales: {e}")
-        st.stop()
-    # --------------------------
+    # --- CORRECCIÓN DEFINITIVA (MANUAL COPY) ---
+    # Extraemos los datos manualmente a un diccionario nuevo.
+    # Esto rompe el vínculo con Streamlit y evita el error de recursión.
     
-    # 2. Inicializar Autenticador
+    secrets_usernames = st.secrets['credentials']['usernames']
+    
+    # Construimos un diccionario limpio y editable
+    dict_credentials = {'usernames': {}}
+    
+    for username, data in secrets_usernames.items():
+        dict_credentials['usernames'][username] = {
+            'name': data['name'],
+            'password': data['password']
+        }
+    # -------------------------------------------
+    
+    # 2. Inicializar Autenticador con el diccionario limpio
     authenticator = stauth.Authenticate(
         dict_credentials,
         st.secrets['cookie']['name'],
@@ -37,7 +42,7 @@ def bloquear_acceso():
     if st.session_state["authentication_status"]:
         with st.sidebar:
             st.write(f"👤 **{st.session_state['name']}**")
-            # El botón de logout ahora modificará 'dict_credentials' (la copia), no 'st.secrets'
+            # Ahora el logout modificará 'dict_credentials' (nuestra copia), sin romper nada
             authenticator.logout('Cerrar Sesión', 'sidebar')
         return True 
         
