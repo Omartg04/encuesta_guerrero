@@ -181,30 +181,34 @@ def main():
 
         st_folium(m, height=550, use_container_width=True)
 
-    # --- 7. SEMÁFORO DE REZAGO (AL FINAL) ---
+# --- 7. SEMÁFORO DE REZAGO (AL FINAL) ---
     st.markdown("---")
     st.subheader("🚨 Semáforo de Rezago Seccional")
     
     df_rezago = df_avance.copy()
     
-    # --- PARCHE DE SEGURIDAD DE ESCALA ---
-    # Si detectamos que los datos vienen en decimales pequeños (ej. promedio < 5),
-    # asumimos escala 0-1 y multiplicamos por 100 para estandarizar a escala 0-100.
+    # Parche de escala (0-1 a 0-100)
     if df_rezago['porcentaje'].mean() < 5:
         df_rezago['porcentaje'] = df_rezago['porcentaje'] * 100
-    # -------------------------------------
 
-    # Clasificación de Status (Escala 0-100)
+    # Clasificación de Status
     def clasificar_status(row):
         val = row['porcentaje']
         if row['realizadas'] == 0: return "🔴 Sin Iniciar"
         if val < 30: return "🟠 Rezago Crítico"
         if val < 100: return "🟡 En Proceso"
-        return "🟢 Completada" # >= 100%
+        return "🟢 Completada"
 
     df_rezago['Estatus'] = df_rezago.apply(clasificar_status, axis=1)
     
-    cols_mostrar = ['nombre_municipio', 'seccion', 'encuestas_totales', 'realizadas', 'porcentaje', 'Estatus']
+    # 1. ACTUALIZACIÓN DE COLUMNAS: Agregamos 'Supervisor_Label'
+    # Nota: Asegúrate de que 'Supervisor_Label' exista en tu df_avance (viene desde el merge con gdf_view)
+    # Si por algo no está, usa 'Supervisor_ID'
+    columna_sup = 'Supervisor_Label' if 'Supervisor_Label' in df_rezago.columns else 'Supervisor_ID'
+    
+    cols_mostrar = ['nombre_municipio', columna_sup, 'seccion', 'encuestas_totales', 'realizadas', 'porcentaje', 'Estatus']
+    
+    # Ordenar: Prioridad a las vacías y las lentas
     df_rezago = df_rezago.sort_values(by=['porcentaje', 'realizadas'], ascending=[True, True])
 
     # Métricas de Alerta
@@ -217,20 +221,34 @@ def main():
     
     with c3:
         st.write("")
-        csv = df_rezago[cols_mostrar].to_csv(index=False)
-        st.download_button("⬇️ Descargar Reporte Focos Rojos", csv, "rezago.csv", "text/csv", type="primary")
+        
+        # 2. FILTRO PARA DESCARGA: Solo pendientes (<100%)
+        # Excluimos las que ya están "🟢 Completada" o tienen 100% o más
+        df_pendientes = df_rezago[df_rezago['porcentaje'] < 100].copy()
+        
+        csv = df_pendientes[cols_mostrar].to_csv(index=False)
+        st.download_button(
+            label=f"⬇️ Descargar Pendientes ({len(df_pendientes)} secciones)", 
+            data=csv, 
+            file_name="reporte_rezago_operativo.csv", 
+            mime="text/csv", 
+            type="primary",
+            help="Descarga solo las secciones que no han llegado a la meta."
+        )
 
+    # Tabla Visual (Aquí sí mostramos todo para contexto, o puedes usar df_pendientes si prefieres)
     st.dataframe(
         df_rezago[cols_mostrar].head(100),
         use_container_width=True,
         column_config={
             "nombre_municipio": "Municipio",
+            columna_sup: "Supervisor", # Etiqueta amigable
             "seccion": "Sección",
             "encuestas_totales": "Meta",
             "realizadas": "Hechas",
             "porcentaje": st.column_config.ProgressColumn(
                 "Avance %",
-                format="%.1f%%", # Muestra 125.0%
+                format="%.1f%%",
                 min_value=0,
                 max_value=100,
             ),
