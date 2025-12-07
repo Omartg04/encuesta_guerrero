@@ -8,7 +8,31 @@ from scipy.optimize import linear_sum_assignment
 from src.config import MUNICIPIOS_MAP, SUPERVISORES_CONFIG
 
 def balanced_cluster_optimization(gdf, n_clusters):
-    """Algoritmo Húngaro para balanceo de cargas."""
+    """
+    Algoritmo Híbrido:
+    1. Si el CSV trae la columna 'grupo_supervisor', RESPETA esa asignación (Modo Ejecución).
+    2. Si no la trae, CALCULA los grupos usando K-Means (Modo Planeación).
+    """
+    
+    # --- MODO EJECUCIÓN (ASIGNACIÓN FIJA) ---
+    # Verificamos si existe la columna de anclaje en el archivo
+    # A veces pandas la lee como float (1.0), aseguramos entero
+    if 'grupo_supervisor' in gdf.columns:
+        try:
+            gdf = gdf.copy()
+            # Limpieza y asignación directa
+            gdf['Supervisor_ID'] = gdf['grupo_supervisor'].fillna(0).astype(int)
+            
+            # Validación de seguridad: Si por alguna razón faltan grupos, alertar (opcional)
+            # Pero asumimos que el CSV viene bien.
+            return gdf
+        except Exception as e:
+            print(f"⚠️ Error leyendo grupo fijo: {e}. Se usará cálculo automático.")
+            # Si falla, dejamos que corra el código de abajo (fallback)
+
+    # --- MODO PLANEACIÓN (CÁLCULO AUTOMÁTICO) ---
+    # (Este es tu código original que se usa si no hay columna fija)
+    
     if len(gdf) <= n_clusters:
         gdf = gdf.copy()
         gdf['Supervisor_ID'] = range(1, len(gdf) + 1)
