@@ -2,22 +2,14 @@ import streamlit as st
 import streamlit_authenticator as stauth
 
 def bloquear_acceso():
-    """
-    Función de bloqueo segura.
-    Crea una copia manual de las credenciales para evitar errores de inmutabilidad y recursión.
-    """
-    # 1. Validar que existan los secretos
+    # 1. Validar existencia de secretos
     if 'credentials' not in st.secrets:
-        st.error("Error: No se configuraron secretos (.streamlit/secrets.toml)")
+        st.error("Error: No se configuraron secretos en el panel de Streamlit Cloud.")
         st.stop()
 
-    # --- CORRECCIÓN DEFINITIVA (MANUAL COPY) ---
-    # Extraemos los datos manualmente a un diccionario nuevo.
-    # Esto rompe el vínculo con Streamlit y evita el error de recursión.
-    
+    # 2. Copia MANUAL de credenciales 
+    # (Esto evita errores de 'recursion depth' o 'readonly' en la nube)
     secrets_usernames = st.secrets['credentials']['usernames']
-    
-    # Construimos un diccionario limpio y editable
     dict_credentials = {'usernames': {}}
     
     for username, data in secrets_usernames.items():
@@ -25,9 +17,8 @@ def bloquear_acceso():
             'name': data['name'],
             'password': data['password']
         }
-    # -------------------------------------------
     
-    # 2. Inicializar Autenticador con el diccionario limpio
+    # 3. Autenticador
     authenticator = stauth.Authenticate(
         dict_credentials,
         st.secrets['cookie']['name'],
@@ -35,21 +26,18 @@ def bloquear_acceso():
         st.secrets['cookie']['expiry_days']
     )
 
-    # 3. Renderizar Widget de Login
-    authenticator.login()
+    # 4. Login
+    authenticator.login(location='main')
 
-    # 4. Verificar Estado
+    # 5. Validación
     if st.session_state["authentication_status"]:
         with st.sidebar:
             st.write(f"👤 **{st.session_state['name']}**")
-            # Ahora el logout modificará 'dict_credentials' (nuestra copia), sin romper nada
             authenticator.logout('Cerrar Sesión', 'sidebar')
-        return True 
-        
+        return True
     elif st.session_state["authentication_status"] is False:
         st.error("Usuario o contraseña incorrectos")
         st.stop()
-        
     elif st.session_state["authentication_status"] is None:
-        st.warning("🔒 Esta sección es privada. Inicia sesión para ver el monitoreo.")
+        st.warning("🔒 Ingresa tus credenciales para ver el monitoreo.")
         st.stop()
