@@ -7,3 +7,5 @@ scikit-learn
 scipy
 numpy
 streamlit-authenticator
+plotly
+openpyxl

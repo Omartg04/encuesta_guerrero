@@ -1,40 +1,58 @@
 import streamlit as st
+from src.auth import bloquear_acceso
 
-# Configuración de página
+# Configuración de página principal
 st.set_page_config(
-    page_title="Centro de Mando Electoral",
+    page_title="Sistema Electoral - Guerrero",
     page_icon="🗳️",
     layout="centered"
 )
 
-# Título y Bienvenida
-st.title("🗳️ Centro de Mando Logístico - Guerrero")
+# --- AUTENTICACIÓN CENTRALIZADA ---
+# Si el usuario no está logueado, esto detiene la ejecución aquí mismo.
+if bloquear_acceso():
+    
+    # --- UI DEL HOME ---
+    st.title("🗳️ Sistema de Inteligencia Electoral")
+    st.markdown("### Estado de Guerrero 2024-2025")
+    st.markdown("---")
 
-st.markdown("""
-### Bienvenido al Sistema de Inteligencia Territorial Encuesta Diciembre 2025
+    st.info("📢 **ESTATUS ACTUAL:** Fase de Cierre y Validación de Datos.")
 
-Selecciona un módulo en el menú lateral para comenzar:
+    # --- MENÚ DE MÓDULOS ---
+    
+    # 1. MONITOREO (Fase Operativa)
+    with st.container(border=True):
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            st.markdown("# 📊")
+        with col2:
+            st.subheader("Monitoreo en Tiempo Real")
+            st.write("Supervisión de levantamiento, cobertura territorial y alertas.")
+            # Ajusta el nombre del archivo si es distinto (ej. 1_Monitoreo.py)
+            st.page_link("pages/1_📊_Monitoreo.py", label="Ir al Tablero", icon="▶️")
 
----
+    # 2. PLANEACIÓN (Fase Logística)
+    with st.container(border=True):
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            st.markdown("# 🗺️")
+        with col2:
+            st.subheader("Planeación Logística")
+            st.write("Mapas de asignación, clusters y rutas de supervisión.")
+            # Ajusta el nombre del archivo si es distinto
+            st.page_link("pages/2_🗺️_Planeacion.py", label="Ver Mapas", icon="▶️")
 
-#### 🗺️ 1. Planeación y Asignación
-* **Objetivo:** Visualización estratégica de secciones y cargas de trabajo.
-* **Funcionalidades:** * Mapa de secciones balanceado.
-    * Filtro operativo por supervisor.
-    * Descarga de rutas y mapas (Manzanas INEGI).
+    # 3. AUDITORÍA (Fase de Calidad - ¡NUEVO!)
+    with st.container(border=True):
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            st.markdown("# 🔍")
+        with col2:
+            st.subheader("Auditoría y Estandarización")
+            st.markdown("**¡NUEVO MÓDULO!**")
+            st.write("Limpieza de datos, validación GPS, renombrado de variables y descarga de Base Maestra.")
+            st.page_link("pages/3_🔍_Auditoria.py", label="Auditar Datos", icon="✨")
 
-#### 📊 2. Monitoreo y Auditoría 
-* **Objetivo:** Seguimiento en tiempo real del levantamiento de campo.
-* **Funcionalidades:**
-    * Auditoría de coordenadas GPS (Geo-Fencing).
-    * Barras de avance vs Meta.
-    * Productividad por encuestador.
-    * Secciones críticas
-
----
-*v2.0 - Sprint 2* Data & AI Inclusion Tech
-""")
-
-# Sidebar informativo
-with st.sidebar:
-    st.info("Selecciona una página arriba 👆")
+    st.markdown("---")
+    st.caption("Developed for Strategic Intelligence • v2.0 (Cierre)")
