@@ -9,7 +9,6 @@ st.set_page_config(
 )
 
 # --- AUTENTICACIÓN CENTRALIZADA ---
-# Si el usuario no está logueado, esto detiene la ejecución aquí mismo.
 if bloquear_acceso():
     
     # --- UI DEL HOME ---
@@ -21,7 +20,7 @@ if bloquear_acceso():
 
     # --- MENÚ DE MÓDULOS ---
     
-    # 1. MONITOREO (Fase Operativa)
+    # 1. MONITOREO (Ahora apunta a tu archivo 2_📊_Monitoreo.py)
     with st.container(border=True):
         col1, col2 = st.columns([1, 4])
         with col1:
@@ -29,10 +28,10 @@ if bloquear_acceso():
         with col2:
             st.subheader("Monitoreo en Tiempo Real")
             st.write("Supervisión de levantamiento, cobertura territorial y alertas.")
-            # Ajusta el nombre del archivo si es distinto (ej. 1_Monitoreo.py)
-            st.page_link("pages/1_📊_Monitoreo.py", label="Ir al Tablero", icon="▶️")
+            # CORREGIDO: Apunta al archivo 2
+            st.page_link("pages/2_📊_Monitoreo.py", label="Ir al Tablero", icon="▶️")
 
-    # 2. PLANEACIÓN (Fase Logística)
+    # 2. PLANEACIÓN (Ahora apunta a tu archivo 1_🗺️_Planeacion.py)
     with st.container(border=True):
         col1, col2 = st.columns([1, 4])
         with col1:
@@ -40,10 +39,10 @@ if bloquear_acceso():
         with col2:
             st.subheader("Planeación Logística")
             st.write("Mapas de asignación, clusters y rutas de supervisión.")
-            # Ajusta el nombre del archivo si es distinto
-            st.page_link("pages/2_🗺️_Planeacion.py", label="Ver Mapas", icon="▶️")
+            # CORREGIDO: Apunta al archivo 1
+            st.page_link("pages/1_🗺️_Planeacion.py", label="Ver Mapas", icon="▶️")
 
-    # 3. AUDITORÍA (Fase de Calidad - ¡NUEVO!)
+    # 3. AUDITORÍA (Apunta a tu archivo 3_🔍_Auditoria.py)
     with st.container(border=True):
         col1, col2 = st.columns([1, 4])
         with col1:
@@ -51,7 +50,8 @@ if bloquear_acceso():
         with col2:
             st.subheader("Auditoría y Estandarización")
             st.markdown("**¡NUEVO MÓDULO!**")
-            st.write("Limpieza de datos, validación GPS, renombrado de variables y descarga de Base Maestra.")
+            st.write("Limpieza de datos, validación GPS y descarga de Base Maestra.")
+            # CORREGIDO: Apunta al archivo 3
             st.page_link("pages/3_🔍_Auditoria.py", label="Auditar Datos", icon="✨")
 
     st.markdown("---")
