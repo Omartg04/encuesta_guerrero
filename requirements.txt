@@ -9,3 +9,4 @@ numpy
 streamlit-authenticator
 plotly
 openpyxl
+matplotlib
