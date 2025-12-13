@@ -5,10 +5,9 @@ import plotly.graph_objects as go
 import base64
 from io import BytesIO
 from datetime import datetime
-from src.auth import bloquear_acceso
 
+# --- CONFIGURACIÓN DE PÁGINA (SIN LOGIN) ---
 st.set_page_config(page_title="Resultados Finales 2025", layout="wide")
-bloquear_acceso()
 
 # ==============================================================================
 # 🗄️ BASE DE DATOS MAESTRA (JUNIO REAL vs DICIEMBRE REAL)
@@ -50,7 +49,7 @@ DATOS_HEATMAP_DIC = [
     {"Aspirante": "Abelina López", "Honestidad": 9.6, "Cercanía": 14.9, "Der. Mujeres": 14.8, "Conoce Edo": 17.1, "Cumple": 8.8, "Buen Candidato": 14.0}
 ]
 
-# Datos Evolutivos (Radar) - Solo para destacar el contraste Iván vs Félix
+# Datos Evolutivos (Radar)
 DATOS_RADAR_EVO = {
     "Iván Hernández": {"Honestidad": [1.7, 33.6], "Der. Mujeres": [2.1, 37.8], "Cercanía": [2.1, 35.3], "Conoce Edo": [2.5, 43.3], "Cumple": [1.4, 31.9]},
     "Félix Salgado": {"Honestidad": [14.3, 6.9], "Der. Mujeres": [15.2, 6.8], "Cercanía": [23.3, 15.6], "Conoce Edo": [41.1, 34.3], "Cumple": [14.3, 7.7]}
@@ -170,7 +169,6 @@ def main():
         st.caption("Intensidad de Color: Verde fuerte = Mayor % Positivo")
         
         df_heat = pd.DataFrame(DATOS_HEATMAP_DIC).set_index("Aspirante")
-        # Ordenar por "Buen Candidato"
         df_heat = df_heat.sort_values("Buen Candidato", ascending=False)
         
         fig_heat = px.imshow(
@@ -183,7 +181,7 @@ def main():
         st.divider()
 
         # 2. RADAR COMPARATIVO (EVOLUCIÓN)
-        st.markdown("##### 🕸️ Evolución Estructural: El contraste")
+        st.markdown("##### 🕸️ Evolución Estructural: El contraste (Jun vs Dic)")
         col1, col2 = st.columns(2)
         
         with col1:
