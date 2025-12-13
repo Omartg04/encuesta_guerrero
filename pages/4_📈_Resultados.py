@@ -14,7 +14,7 @@ bloquear_acceso()
 # 🗄️ BASE DE DATOS MAESTRA (JUNIO REAL vs DICIEMBRE REAL)
 # ==============================================================================
 
-# 1. PROBLEMAS (Contexto)
+# 1. PROBLEMAS
 DATOS_PROBLEMAS = {
     "GUERRERO (ESTATAL)": {"Inseguridad": [47.0, 63.9], "Falta de agua": [4.0, 8.4], "Corrupción": [6.0, 6.2], "Calles mal estado": [1.0, 4.0], "Bajos Salarios": [1.0, 2.9]},
     "ACAPULCO": {"Inseguridad": [56.0, 62.2], "Falta de agua": [4.0, 11.0], "Corrupción": [3.0, 7.3]},
@@ -22,7 +22,7 @@ DATOS_PROBLEMAS = {
     "IGUALA": {"Inseguridad": [59.0, 49.6], "Economía": [4.0, 8.5], "Calles mal estado": [1.0, 6.0]}
 }
 
-# 2. PREFERENCIAS PARTIDISTAS (Voto Gobernador)
+# 2. VOTO GOBERNADOR (PARTIDOS)
 DATOS_VOTO_GOB = {
     "GUERRERO (ESTATAL)": {"MORENA": [48.0, 59.9], "PRI": [16.0, 3.8], "MC": [7.0, 2.5], "PAN": [3.0, 1.6], "PT": [2.0, 1.3], "Ninguno": [10.0, 16.1]},
     "ACAPULCO": {"MORENA": [48.0, 64.7], "PRI": [10.0, 3.4], "MC": [10.0, 2.6], "Ninguno": [11.0, 14.4]},
@@ -38,35 +38,25 @@ DATOS_CONOCIMIENTO = {
     "IGUALA": {"Félix Salgado": [86.0, 61.0], "Iván Hernández": [6.0, 36.8], "Abelina López": [37.0, 15.4]}
 }
 
-# 4. EVOLUCIÓN ATRIBUTOS (JUNIO REAL vs DICIEMBRE REAL)
-# Estructura: Atributo -> [Junio, Diciembre]
-# Nota: Iván crece exponencialmente. Félix y Abelina se contraen.
-DATOS_ATRIBUTOS_RADAR = {
-    "Iván Hernández": {
-        "Honestidad": [1.7, 33.6], 
-        "Der. Mujeres": [2.1, 37.8], 
-        "Cercanía": [2.1, 35.3], 
-        "Conoce Edo": [2.5, 43.3], 
-        "Cumple": [1.4, 31.9]
-    },
-    "Félix Salgado": {
-        "Honestidad": [14.3, 6.9], 
-        "Der. Mujeres": [15.2, 6.8], 
-        "Cercanía": [23.3, 15.6], 
-        "Conoce Edo": [41.1, 34.3], 
-        "Cumple": [14.3, 7.7]
-    },
-    "Abelina López": {
-        "Honestidad": [6.2, 9.6], 
-        "Der. Mujeres": [12.2, 14.8], 
-        "Cercanía": [8.7, 14.9], 
-        "Conoce Edo": [13.7, 17.1], 
-        "Cumple": [6.1, 8.8]
-    }
+# 4. DATOS PARA HEATMAP (ATRIBUTOS COMPLETOS DIC)
+DATOS_HEATMAP_DIC = [
+    {"Aspirante": "Iván Hernández", "Honestidad": 33.6, "Cercanía": 35.3, "Der. Mujeres": 37.8, "Conoce Edo": 43.3, "Cumple": 31.9, "Buen Candidato": 65.5},
+    {"Aspirante": "Esthela Damián", "Honestidad": 25.5, "Cercanía": 20.1, "Der. Mujeres": 29.5, "Conoce Edo": 21.2, "Cumple": 20.5, "Buen Candidato": 48.3},
+    {"Aspirante": "Jacinto González", "Honestidad": 20.1, "Cercanía": 21.7, "Der. Mujeres": 24.0, "Conoce Edo": 27.9, "Cumple": 18.1, "Buen Candidato": 41.2},
+    {"Aspirante": "Beatriz Mojica", "Honestidad": 10.1, "Cercanía": 11.3, "Der. Mujeres": 20.8, "Conoce Edo": 21.2, "Cumple": 7.9, "Buen Candidato": 38.5},
+    {"Aspirante": "Javier Saldaña", "Honestidad": 7.0, "Cercanía": 11.2, "Der. Mujeres": 7.6, "Conoce Edo": 21.5, "Cumple": 6.1, "Buen Candidato": 25.1},
+    {"Aspirante": "Félix Salgado", "Honestidad": 6.9, "Cercanía": 15.6, "Der. Mujeres": 6.8, "Conoce Edo": 34.3, "Cumple": 7.7, "Buen Candidato": 21.9},
+    {"Aspirante": "Pablo Amílcar", "Honestidad": 6.2, "Cercanía": 5.1, "Der. Mujeres": 5.0, "Conoce Edo": 9.4, "Cumple": 1.9, "Buen Candidato": 18.8},
+    {"Aspirante": "Abelina López", "Honestidad": 9.6, "Cercanía": 14.9, "Der. Mujeres": 14.8, "Conoce Edo": 17.1, "Cumple": 8.8, "Buen Candidato": 14.0}
+]
+
+# Datos Evolutivos (Radar) - Solo para destacar el contraste Iván vs Félix
+DATOS_RADAR_EVO = {
+    "Iván Hernández": {"Honestidad": [1.7, 33.6], "Der. Mujeres": [2.1, 37.8], "Cercanía": [2.1, 35.3], "Conoce Edo": [2.5, 43.3], "Cumple": [1.4, 31.9]},
+    "Félix Salgado": {"Honestidad": [14.3, 6.9], "Der. Mujeres": [15.2, 6.8], "Cercanía": [23.3, 15.6], "Conoce Edo": [41.1, 34.3], "Cumple": [14.3, 7.7]}
 }
 
-# 5. CANDIDATO INTERNO (PREFERENCIA EVOLUTIVA & FOTO FINAL)
-# Evolución Preferencia Junio -> Diciembre
+# 5. CANDIDATO INTERNO (Evolución Preferencia)
 DATOS_PREFERENCIA_EVOLUCION = [
     {"Aspirante": "Iván Hernández", "Junio": 4.3, "Dic": 21.5},
     {"Aspirante": "Félix Salgado", "Junio": 19.8, "Dic": 9.3},
@@ -76,7 +66,7 @@ DATOS_PREFERENCIA_EVOLUCION = [
     {"Aspirante": "Esthela Damián", "Junio": 4.7, "Dic": 6.9}
 ]
 
-# Foto Final Diciembre (Estatal y Municipios)
+# Foto Final Diciembre
 DATOS_INTERNA_TODOS = {
     "GUERRERO (ESTATAL)": {"Iván Hernández": 21.5, "Beatriz Mojica": 10.0, "Félix Salgado": 9.3, "Esthela Damián": 6.9, "Abelina López": 5.8, "Javier Saldaña": 5.2, "Jacinto González": 4.9, "Pablo Amílcar": 1.8, "Ninguno": 16.0},
     "ACAPULCO": {"Iván Hernández": 22.5, "Beatriz Mojica": 12.0, "Félix Salgado": 9.5, "Abelina López": 8.7, "Esthela Damián": 6.5, "Ninguno": 14.9},
@@ -84,7 +74,7 @@ DATOS_INTERNA_TODOS = {
     "IGUALA": {"Iván Hernández": 22.5, "Esthela Damián": 12.8, "Félix Salgado": 9.0, "Beatriz Mojica": 6.4, "Ninguno": 15.2}
 }
 
-# 6. CAREOS (Escenarios)
+# 6. CAREOS
 DATOS_CAREOS_CONST = {
     "GUERRERO (ESTATAL)": {
         "Careo 1 (Félix)": {"MORENA (Félix)": 22.9, "PRI (Añorve)": 2.5, "MC (Julián)": 2.9, "PT": 4.2, "Ninguno": 33.9},
@@ -103,8 +93,7 @@ def generar_excel_completo():
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         pd.DataFrame(DATOS_INTERNA_TODOS["GUERRERO (ESTATAL)"].items(), columns=["Candidato", "%"]).to_excel(writer, sheet_name='Interna', index=False)
-        pd.DataFrame(DATOS_PREFERENCIA_EVOLUCION).to_excel(writer, sheet_name='Evolucion_Preferencia', index=False)
-        pd.DataFrame(DATOS_ATRIBUTOS_RADAR["Iván Hernández"]).to_excel(writer, sheet_name='Atributos_Ivan', index=True)
+        pd.DataFrame(DATOS_HEATMAP_DIC).to_excel(writer, sheet_name='Atributos_Heatmap', index=False)
     return output.getvalue()
 
 # ==============================================================================
@@ -126,7 +115,7 @@ def main():
         "🚨 1. Problemas", 
         "🏁 2. Partidos", 
         "🧠 3. Conocimiento", 
-        "✨ 4. Atributos (Evolución)", 
+        "✨ 4. Atributos", 
         "🗳️ 5. Candidato Interno", 
         "🥊 6. Careos"
     ])
@@ -149,55 +138,73 @@ def main():
         fig_v = px.bar(df_melt, x="%", y="Partido", color="Mes", barmode="group", orientation='h', text_auto=True, color_discrete_map={"Junio": "#B0BEC5", "Dic": "#880E4F"})
         st.plotly_chart(fig_v, use_container_width=True)
 
-    # TAB 3: CONOCIMIENTO
+    # TAB 3: CONOCIMIENTO (BARRAS AGRUPADAS)
     with tabs[2]:
         st.subheader(f"Evolución de Conocimiento (Name ID) - {seleccion}")
+        st.caption("Comparativo Junio vs Diciembre (Ordenado por Conocimiento Actual)")
+        
         data_c = DATOS_CONOCIMIENTO.get(seleccion, {}) if seleccion in DATOS_CONOCIMIENTO else DATOS_CONOCIMIENTO["GUERRERO (ESTATAL)"]
-        df_c = pd.DataFrame([{"Aspirante": k, "Junio": v[0], "Dic": v[1]} for k,v in data_c.items()]).sort_values("Dic", ascending=True)
         
-        fig_slope = go.Figure()
-        for i, row in df_c.iterrows():
-            color = "#880E4F" if "Iván" in row["Aspirante"] else "gray"
-            width = 4 if "Iván" in row["Aspirante"] else 1
-            opacity = 1 if "Iván" in row["Aspirante"] else 0.4
-            
-            fig_slope.add_shape(type="line", x0=0, y0=row["Junio"], x1=1, y1=row["Dic"], line=dict(color=color, width=width), opacity=opacity)
-            fig_slope.add_trace(go.Scatter(x=[0, 1], y=[row["Junio"], row["Dic"]], mode="markers+text", text=[f"{row['Junio']}%", f"{row['Dic']}% {row['Aspirante']}"], textposition=["middle left", "middle right"], marker=dict(color=color, size=8), showlegend=False))
+        # Preparamos DataFrame para Barras
+        df_c = pd.DataFrame([{"Aspirante": k, "Junio": v[0], "Diciembre": v[1]} for k,v in data_c.items()])
+        df_melt_c = df_c.melt(id_vars="Aspirante", var_name="Mes", value_name="%")
         
-        fig_slope.update_layout(xaxis=dict(showgrid=False, tickvals=[0, 1], ticktext=["Junio", "Diciembre"]), height=600, margin=dict(l=50, r=150))
-        st.plotly_chart(fig_slope, use_container_width=True)
+        # Ordenar por valor de Diciembre
+        order = df_c.sort_values("Diciembre", ascending=True)["Aspirante"].tolist()
+        
+        fig_bar_c = px.bar(
+            df_melt_c, x="%", y="Aspirante", color="Mes", barmode="group", orientation='h', 
+            text_auto=True, 
+            category_orders={"Aspirante": order},
+            color_discrete_map={"Junio": "#B0BEC5", "Diciembre": "#880E4F"}
+        )
+        fig_bar_c.update_layout(height=600)
+        st.plotly_chart(fig_bar_c, use_container_width=True)
 
-    # TAB 4: ATRIBUTOS (EVOLUCIÓN RADAR)
+    # TAB 4: ATRIBUTOS (HEATMAP + RADAR)
     with tabs[3]:
-        st.subheader("Evolución de Atributos Cualitativos (Estatal)")
+        st.subheader("Diagnóstico Cualitativo (Estatal)")
         
+        # 1. HEATMAP COMPLETO (DICIEMBRE)
+        st.markdown("##### 🚦 Semáforo de Atributos (Diciembre)")
+        st.caption("Intensidad de Color: Verde fuerte = Mayor % Positivo")
+        
+        df_heat = pd.DataFrame(DATOS_HEATMAP_DIC).set_index("Aspirante")
+        # Ordenar por "Buen Candidato"
+        df_heat = df_heat.sort_values("Buen Candidato", ascending=False)
+        
+        fig_heat = px.imshow(
+            df_heat, text_auto=True, aspect="auto", 
+            color_continuous_scale="Greens", origin="lower"
+        )
+        fig_heat.update_layout(height=500)
+        st.plotly_chart(fig_heat, use_container_width=True)
+        
+        st.divider()
+
+        # 2. RADAR COMPARATIVO (EVOLUCIÓN)
+        st.markdown("##### 🕸️ Evolución Estructural: El contraste")
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("##### 📈 Expansión de Iván Hernández")
-            st.caption("De ser desconocido (1.7% Honestidad) a Líder (33.6%)")
-            
-            d_ivan = DATOS_ATRIBUTOS_RADAR["Iván Hernández"]
+            st.markdown("**Crecimiento: Iván Hernández**")
+            d_ivan = DATOS_RADAR_EVO["Iván Hernández"]
             categories = list(d_ivan.keys())
             
             fig_rad = go.Figure()
             fig_rad.add_trace(go.Scatterpolar(r=[v[0] for v in d_ivan.values()], theta=categories, fill='toself', name='Junio', line_color='#B0BEC5'))
             fig_rad.add_trace(go.Scatterpolar(r=[v[1] for v in d_ivan.values()], theta=categories, fill='toself', name='Diciembre', line_color='#880E4F'))
-            
-            fig_rad.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 50])), showlegend=True, height=450, title="Crecimiento Estructural")
+            fig_rad.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 45])), showlegend=True, height=400)
             st.plotly_chart(fig_rad, use_container_width=True)
 
         with col2:
-            st.markdown("##### 📉 Contracción de Félix Salgado")
-            st.caption("Desgaste de marca: Caída en Honestidad y Respeto a Mujeres")
-            
-            d_felix = DATOS_ATRIBUTOS_RADAR["Félix Salgado"]
+            st.markdown("**Desgaste: Félix Salgado**")
+            d_felix = DATOS_RADAR_EVO["Félix Salgado"]
             
             fig_rad2 = go.Figure()
             fig_rad2.add_trace(go.Scatterpolar(r=[v[0] for v in d_felix.values()], theta=categories, fill='toself', name='Junio', line_color='#B0BEC5'))
             fig_rad2.add_trace(go.Scatterpolar(r=[v[1] for v in d_felix.values()], theta=categories, fill='toself', name='Diciembre', line_color='#C0392B'))
-            
-            fig_rad2.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 50])), showlegend=True, height=450, title="Desgaste Estructural")
+            fig_rad2.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 45])), showlegend=True, height=400)
             st.plotly_chart(fig_rad2, use_container_width=True)
 
     # TAB 5: CANDIDATO INTERNO
@@ -214,7 +221,7 @@ def main():
             fig_slope2 = go.Figure()
             for i, row in df_evo.iterrows():
                 color = "#880E4F" if "Iván" in row["Aspirante"] else "#90A4AE"
-                if "Félix" in row["Aspirante"]: color = "#C0392B" # Rojo para caída
+                if "Félix" in row["Aspirante"]: color = "#C0392B" 
                 
                 fig_slope2.add_trace(go.Scatter(x=["Jun", "Dic"], y=[row["Junio"], row["Dic"]], mode="lines+markers", name=row["Aspirante"], line=dict(color=color, width=3)))
             
