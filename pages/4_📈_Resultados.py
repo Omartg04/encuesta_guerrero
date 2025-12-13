@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from io import BytesIO
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
@@ -72,7 +71,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 🗄️ BASE DE DATOS [MANTIENE TUS DATOS ORIGINALES]
+# 🗄️ BASE DE DATOS
 # ==============================================================================
 
 DATOS_PROBLEMAS = {
@@ -140,16 +139,6 @@ DATOS_CAREOS_CONST = {
 }
 
 # ==============================================================================
-# 🛠️ FUNCIONES AUXILIARES
-# ==============================================================================
-def generar_excel_completo():
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        pd.DataFrame(DATOS_INTERNA_TODOS["GUERRERO (ESTATAL)"].items(), columns=["Candidato", "%"]).to_excel(writer, sheet_name='Interna', index=False)
-        pd.DataFrame(DATOS_HEATMAP_DIC).to_excel(writer, sheet_name='Atributos_Heatmap', index=False)
-    return output.getvalue()
-
-# ==============================================================================
 # 🚀 APP PRINCIPAL
 # ==============================================================================
 def main():
@@ -185,19 +174,6 @@ def main():
             if seleccion in DATOS_INTERNA_TODOS:
                 ivan_pref = DATOS_INTERNA_TODOS[seleccion].get("Iván Hernández", 0)
                 st.metric("Iván H. (Interna)", f"{ivan_pref}%")
-        
-        st.divider()
-        
-        # Botón de descarga destacado
-        st.markdown("#### 💾 Exportar Datos")
-        st.download_button(
-            "📥 Descargar Excel Completo",
-            data=generar_excel_completo(),
-            file_name=f"Resultados_Cierre_2025_{seleccion.replace(' ', '_')}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True,
-            type="primary"
-        )
         
         st.markdown("<br><br>", unsafe_allow_html=True)
         st.caption("🔄 Última actualización: Diciembre 2025")
