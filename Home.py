@@ -2,48 +2,75 @@ import streamlit as st
 
 # Configuración de página principal
 st.set_page_config(
-    page_title="Inteligencia Electoral Guerrero",
+    page_title="Sistema Electoral - Guerrero",
     page_icon="🗳️",
     layout="centered"
 )
 
-# --- CABECERA DE CIERRE ---
+# --- ENCABEZADO ---
 st.title("🗳️ Sistema de Inteligencia Electoral")
 st.markdown("### Estado de Guerrero | Cierre 2025")
+st.markdown("---")
+
+# --- NOTIFICACIÓN DE ESTATUS ---
+st.success("✅ **PROYECTO CONCLUIDO:** Los resultados finales ya están disponibles para su consulta.")
+
+# ==============================================================================
+# 1. MÓDULO PÚBLICO (RESULTADOS) - DESTACADO
+# ==============================================================================
+st.markdown("#### 🏆 Fase Final: Entregable Ejecutivo")
+
+with st.container(border=True):
+    col_icon, col_text = st.columns([1, 5])
+    
+    with col_icon:
+        st.markdown("# 📈") 
+    
+    with col_text:
+        st.subheader("Tablero de Resultados 2025")
+        st.write(
+            "Visualización interactiva de la encuesta de cierre. Incluye comparativos "
+            "**Junio vs. Diciembre**, análisis de atributos, escenarios constitucionales (Careos) "
+            "y descarga de reportes."
+        )
+        st.page_link("pages/4_📈_Resultados.py", label="Ir al Tablero Final", icon="🚀")
+
 st.divider()
 
-# --- MENSAJE PRINCIPAL ---
-st.success("✅ **REPORTE FINAL DISPONIBLE**")
-st.markdown("""
-El ciclo de evaluación estratégica ha concluido. Los datos procesados incluyen:
-* Encuesta de Cierre (Diciembre 2025).
-* Comparativo Evolutivo (Junio vs. Diciembre).
-* Modelaje de Escenarios Constitucionales.
-""")
+# ==============================================================================
+# 2. MÓDULOS TÉCNICOS (PROCESO)
+# ==============================================================================
+st.markdown("#### 🛠️ Respaldo Metodológico (Proceso)")
 
-# --- ACCESO DIRECTO AL MÓDULO PÚBLICO ---
+# Card 1: Planeación
 with st.container(border=True):
-    col1, col2 = st.columns([1, 4])
-    with col1:
-        st.image("https://cdn-icons-png.flaticon.com/512/2921/2921222.png", width=60) # Icono genérico de gráfica
-    with col2:
-        st.subheader("Consultar Resultados Finales")
-        st.write("Acceso directo al tablero ejecutivo, comparativos y descarga de bases de datos.")
-        
-        # Botón grande
-        st.page_link("pages/4_📈_Resultados.py", label="Ver Tablero de Resultados 2025", icon="🚀")
+    c1, c2 = st.columns([1, 5])
+    with c1:
+        st.markdown("### 🗺️")
+    with c2:
+        st.markdown("**1. Planeación Logística**")
+        st.caption("Diseño muestral, cartografía digital y asignación de rutas de levantamiento.")
+        st.page_link("pages/1_🗺️_Planeacion.py", label="Ver Mapas", icon="▶️")
+
+# Card 2: Monitoreo
+with st.container(border=True):
+    c1, c2 = st.columns([1, 5])
+    with c1:
+        st.markdown("### 📊")
+    with c2:
+        st.markdown("**2. Monitoreo en Campo**")
+        st.caption("Supervisión en tiempo real del levantamiento de encuestas y cobertura GPS.")
+        st.page_link("pages/2_📊_Monitoreo.py", label="Ver Avance", icon="▶️")
+
+# Card 3: Auditoría
+with st.container(border=True):
+    c1, c2 = st.columns([1, 5])
+    with c1:
+        st.markdown("### 🔍")
+    with c2:
+        st.markdown("**3. Auditoría de Datos**")
+        st.caption("Procesos de validación, limpieza de base de datos y control de calidad.")
+        st.page_link("pages/3_🔍_Auditoria.py", label="Ver Auditoría", icon="▶️")
 
 st.markdown("---")
-
-# --- ACCESO A MÓDULOS INTERNOS (OPCIONAL/RESTRINGIDO) ---
-st.caption("Módulos técnicos (Requieren credenciales):")
-col_a, col_b, col_c = st.columns(3)
-with col_a:
-    st.page_link("pages/1_🗺️_Planeacion.py", label="Planeación", icon="🔒")
-with col_b:
-    st.page_link("pages/2_📊_Monitoreo.py", label="Monitoreo", icon="🔒")
-with col_c:
-    st.page_link("pages/3_🔍_Auditoria.py", label="Auditoría", icon="🔒")
-
-st.markdown("---")
-st.caption("Sistema de Inteligencia Estratégica • Versión de Cierre 2.0")
+st.caption("Sistema de Inteligencia Estratégica • Versión Final 2.0 (Producción)")
