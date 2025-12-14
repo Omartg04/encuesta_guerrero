@@ -236,27 +236,50 @@ COLOR_ASPIRANTES = {
 # 🛠️ FUNCIONES AUXILIARES DE ESTILO
 # ==============================================================================
 
-def estilo_pro(fig, height=500, legend_top=True):
+def estilo_pro(fig, height=500, show_legend=True, legend_bottom=False):
     """Aplica estilo profesional a las gráficas de Plotly"""
+    
+    # Configuración de leyenda
+    legend_cfg = {}
+    if not show_legend:
+        legend_cfg = dict(showlegend=False)
+    elif legend_bottom:
+        legend_cfg = dict(
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.15,
+                xanchor="center",
+                x=0.5
+            )
+        )
+    else:
+        # Top right por defecto
+        legend_cfg = dict(
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            )
+        )
+
     fig.update_layout(
         font_family="Roboto, sans-serif",
         title_font_family="Roboto, sans-serif",
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         height=height,
-        margin=dict(t=40, l=20, r=20, b=20),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ) if legend_top else None,
+        margin=dict(t=40, l=20, r=20, b=20 if not legend_bottom else 60), # Margen extra abajo si leyenda está abajo
         hoverlabel=dict(
             bgcolor="white",
             font_size=14,
             font_family="Roboto, sans-serif"
-        )
+        ),
+        **legend_cfg
     )
     fig.update_xaxes(showgrid=False, zeroline=False)
     fig.update_yaxes(showgrid=False, zeroline=False)
@@ -289,11 +312,10 @@ def main():
         st.markdown("""
         **Levantamiento:** Diciembre 2025
         
-        **Muestra:** 1,200 casos efectivos
-        
-        **Margen de error:** +/- 3.1%
-        
-        **Nivel de confianza:** 95%
+        **Muestra estatal:** 1,907 casos efectivos
+        * **Acapulco:** 793 casos
+        * **Chilpancingo:** 665 casos
+        * **Iguala:** 449 casos
         
         **Metodología:** Encuesta en vivienda
         """)
@@ -350,7 +372,8 @@ def main():
                             color_discrete_map=color_map_partidos)
                 fig_v.update_traces(textposition='outside', textfont_size=12)
                 fig_v.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
-                st.plotly_chart(estilo_pro(fig_v, height=600), use_container_width=True)
+                # Eliminamos la leyenda porque los nombres ya están en el eje Y
+                st.plotly_chart(estilo_pro(fig_v, height=600, show_legend=False), use_container_width=True)
 
     # 3. CONOCIMIENTO -------------------------------------------------------------
     with tabs[2]:
@@ -378,7 +401,8 @@ def main():
                             color_discrete_map=color_map_aspirantes)
                 fig_c.update_traces(textposition='outside')
                 fig_c.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
-                st.plotly_chart(estilo_pro(fig_c, height=650), use_container_width=True)
+                # Leyenda redundante (nombres en eje Y), eliminada
+                st.plotly_chart(estilo_pro(fig_c, height=650, show_legend=False), use_container_width=True)
 
     # 4. OPINIÓN ------------------------------------------------------------------
     with tabs[3]:
@@ -390,7 +414,6 @@ def main():
 
             with st.container(border=True):
                 st.markdown("##### 📈 Comparativo de Imagen (Estatal)")
-                # (Código de gráfica divergente optimizado)
                 data_opinion_comp = []
                 for asp, vals in DATOS_OPINION_ESTATAL.items():
                     data_opinion_comp.append({"Aspirante": asp, "Tipo": "Positiva", "Junio": vals["Buena"][0], "Diciembre": vals["Buena"][1]})
@@ -400,7 +423,6 @@ def main():
                 orden_aspirantes = df_opinion_comp[df_opinion_comp["Tipo"] == "Positiva"].sort_values("Diciembre", ascending=False)["Aspirante"].tolist()
                 
                 fig_comp = go.Figure()
-                colors = {"Positiva": ["#B0BEC5", "#4CAF50"], "Negativa": ["#BDBDBD", "#F44336"]}
                 
                 for asp in orden_aspirantes:
                     df_asp = df_opinion_comp[df_opinion_comp["Aspirante"] == asp]
@@ -410,7 +432,8 @@ def main():
                     fig_comp.add_trace(go.Bar(y=[asp], x=[-df_asp[df_asp["Tipo"]=="Negativa"]["Diciembre"].values[0]], orientation='h', name="Negativa Dic", marker_color="#C62828", texttemplate="%{x}%", textposition="inside"))
                 
                 fig_comp.update_layout(barmode='relative', title="Balance Diciembre (Positiva vs Negativa)", yaxis={'categoryorder':'array', 'categoryarray':orden_aspirantes})
-                st.plotly_chart(estilo_pro(fig_comp, height=600), use_container_width=True)
+                # Leyenda movida abajo para que no estorbe
+                st.plotly_chart(estilo_pro(fig_comp, height=600, legend_bottom=True), use_container_width=True)
 
         else:
              with st.container(border=True):
@@ -424,7 +447,8 @@ def main():
                 fig_op = px.bar(df_melt, x="% Positiva", y="Aspirante", color="Aspirante", facet_col="Mes",
                                 orientation='h', text_auto=True, category_orders={"Aspirante": order},
                                 color_discrete_map=color_map_op)
-                st.plotly_chart(estilo_pro(fig_op), use_container_width=True)
+                # Leyenda redundante eliminada
+                st.plotly_chart(estilo_pro(fig_op, show_legend=False), use_container_width=True)
 
     # 5. ATRIBUTOS ----------------------------------------------------------------
     with tabs[4]:
@@ -441,12 +465,12 @@ def main():
                 st.markdown("**Junio**")
                 df_jun = pd.DataFrame(DATOS_ATRIBUTOS_JUN).set_index("Aspirante").sort_values("Buen Candidato", ascending=False)
                 fig_jun = px.imshow(df_jun, text_auto=True, aspect="auto", color_continuous_scale="Blues")
-                st.plotly_chart(estilo_pro(fig_jun, height=400, legend_top=False), use_container_width=True)
+                st.plotly_chart(estilo_pro(fig_jun, height=400, show_legend=False), use_container_width=True)
             with col_h2:
                 st.markdown("**Diciembre**")
                 df_dic = pd.DataFrame(DATOS_ATRIBUTOS_DIC).set_index("Aspirante").sort_values("Buen Candidato", ascending=False)
                 fig_dic = px.imshow(df_dic, text_auto=True, aspect="auto", color_continuous_scale="Greens")
-                st.plotly_chart(estilo_pro(fig_dic, height=400, legend_top=False), use_container_width=True)
+                st.plotly_chart(estilo_pro(fig_dic, height=400, show_legend=False), use_container_width=True)
 
         with st.container(border=True):
             st.markdown("#### Evolución Radar")
@@ -533,12 +557,12 @@ def main():
                 st.markdown("**Edad**")
                 df = pd.DataFrame([{"Rango": k, "Diciembre": v[1]} for k, v in DATOS_SOCIODEM["Edad"].items()])
                 fig = px.pie(df, values="Diciembre", names="Rango", hole=0.4, color_discrete_sequence=px.colors.sequential.Blues)
-                st.plotly_chart(estilo_pro(fig, height=300, legend_top=False), use_container_width=True)
+                st.plotly_chart(estilo_pro(fig, height=300, show_legend=False), use_container_width=True)
             with col2:
                 st.markdown("**Sexo**")
                 df = pd.DataFrame([{"Sexo": k, "Diciembre": v[1]} for k, v in DATOS_SOCIODEM["Sexo"].items()])
                 fig = px.pie(df, values="Diciembre", names="Sexo", hole=0.4, color_discrete_map={"Hombres": "#90CAF9", "Mujeres": "#F48FB1"})
-                st.plotly_chart(estilo_pro(fig, height=300, legend_top=False), use_container_width=True)
+                st.plotly_chart(estilo_pro(fig, height=300, show_legend=False), use_container_width=True)
             with col3:
                 st.markdown("**NSE**")
                 df = pd.DataFrame([{"NSE": k, "Diciembre": v[1]} for k, v in DATOS_SOCIODEM["NSE"].items()])
