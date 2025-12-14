@@ -163,23 +163,40 @@ DATOS_CAREO_2 = {
 }
 
 # ==============================================================================
-# 🎨 PALETAS DE COLORES
+# 🎨 PALETAS DE COLORES ACTUALIZADAS
 # ==============================================================================
 COLOR_PARTIDOS = {
-    "PAN": "#0000FF", "PRI": "#008000", "PRD": "#FFFF00", "PVEM": "#90EE90",
-    "PT": "#FF0000", "MC": "#FFA500", "MORENA": "#880E4F",
-    "Ninguno": "#808080", "No sabe": "#A9A9A9", "No respondió": "#D3D3D3"
+    "PAN": "#0066CC", 
+    "PRI": "#00A650", 
+    "PRD": "#FFD700", 
+    "PVEM": "#90EE90",
+    "PT": "#DC143C", 
+    "MC": "#FF8C00", 
+    "MORENA": "#880E4F",
+    "Ninguno": "#808080", 
+    "No sabe": "#A9A9A9", 
+    "No respondió": "#D3D3D3"
 }
 
 COLOR_ASPIRANTES = {
-    "Iván Hernández": "#880E4F", "Iván Hernández Díaz": "#880E4F",
-    "Félix Salgado": "#C0392B", "Félix Salgado Macedonio": "#C0392B",
-    "Abelina López": "#1f77b4", "Beatriz Mojica": "#2ca02c",
-    "Esthela Damián": "#ff7f0e", "Javier Saldaña": "#9467bd",
-    "Jacinto González": "#8c564b", "Pablo Amílcar": "#e377c2",
-    "Gustavo Alarcón Herrera (PAN)": "#0000FF", "Manuel Añorve Baños (PRI)": "#008000",
-    "Julián López Galeana (MC)": "#FFA500", "Candidato o candidata del PT": "#FF0000",
-    "Candidato o candidata del PVEM": "#90EE90", "Candidato o candidata del PRD": "#FFFF00"
+    "Iván Hernández": "#880E4F", 
+    "Iván Hernández Díaz": "#880E4F",
+    "Félix Salgado": "#C0392B", 
+    "Félix Salgado Macedonio": "#C0392B",
+    "Abelina López": "#1f77b4", 
+    "Beatriz Mojica": "#2ca02c",
+    "Esthela Damián": "#ff7f0e", 
+    "Javier Saldaña": "#9467bd",
+    "Jacinto González": "#8c564b", 
+    "Pablo Amílcar": "#e377c2",
+    "Gustavo Alarcón Herrera (PAN)": "#0066CC", 
+    "Manuel Añorve Baños (PRI)": "#00A650",
+    "Julián López Galeana (MC)": "#FF8C00", 
+    "Candidato o candidata del PT": "#DC143C",
+    "Candidato o candidata del PVEM": "#90EE90", 
+    "Candidato o candidata del PRD": "#FFD700",
+    "Ninguno": "#808080",
+    "No sabe": "#A9A9A9"
 }
 
 # ==============================================================================
@@ -205,7 +222,7 @@ def analisis_conocimiento(sel):
 
 def analisis_opinion(sel):
     if sel == "GUERRERO (ESTATAL)":
-        return "**Análisis:** Iván Hernández alcanza la opinión neta más alta. Félix Salgado mantiene alta polarización."
+        return "**Análisis:** Iván Hernández alcanza la opinión más favorable. Félix Salgado mantiene alta polarización."
     else:
         data = DATOS_OPINION_MUNICIPAL.get(sel, {})
         if data and "Iván Hernández" in data:
@@ -241,10 +258,10 @@ def main():
     st.markdown("### Tablero Estratégico de Encuesta")
 
     with st.sidebar:
-        st.header("📍 Vista Territorial")
+        st.header("🔍 Vista Territorial")
         sel = st.selectbox("Seleccionar:", ["GUERRERO (ESTATAL)", "ACAPULCO", "CHILPANCINGO", "IGUALA"])
 
-    tabs = st.tabs(["🚨 Problemas", "🏁 Partidos", "🧠 Conocimiento", "💭 Opinión", "✨ Atributos", "🗳️ Candidato Interno", "👔 Evaluación Autoridades", "📊 Sociodemográficos", "⚔️ Careo"])
+    tabs = st.tabs(["🚨 Problemas", "🏛️ Partidos", "🧠 Conocimiento", "💭 Opinión", "✨ Atributos", "🗳️ Candidato Interno", "👔 Evaluación Autoridades", "📊 Sociodemográficos", "⚔️ Careo"])
 
     with tabs[0]:  # Problemas
         st.subheader(f"Principales Problemas - {sel}")
@@ -262,13 +279,23 @@ def main():
         st.info(analisis_partidos(sel))
         data_v = DATOS_VOTO_GOB.get(sel, {})
         df_v = pd.DataFrame([{"Partido": k, "Junio": v[0], "Diciembre": v[1]} for k, v in data_v.items()])
+        
+        # Crear mapeo de colores para cada partido específicamente
+        color_map_partidos = {}
+        for partido in df_v["Partido"].unique():
+            if partido in COLOR_PARTIDOS:
+                color_map_partidos[partido] = COLOR_PARTIDOS[partido]
+        
         df_melt_v = df_v.melt(id_vars="Partido", var_name="Mes", value_name="%")
         order = df_v.sort_values("Diciembre", ascending=False)["Partido"].tolist()
-        fig_v = px.bar(df_melt_v, x="%", y="Partido", color="Mes", barmode="group", orientation='h',
-                       text_auto=True, height=600, category_orders={"Partido": order},
-                       color_discrete_map={"Junio": "#B0BEC5", "Diciembre": "#880E4F"})
+        
+        fig_v = px.bar(df_melt_v, x="%", y="Partido", color="Partido", facet_col="Mes",
+                       orientation='h', text_auto=True, height=600, 
+                       category_orders={"Partido": order},
+                       color_discrete_map=color_map_partidos)
         fig_v.update_traces(textposition='outside', textfont_size=12)
         fig_v.update_layout(showlegend=True)
+        fig_v.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
         st.plotly_chart(fig_v, use_container_width=True)
 
     with tabs[2]:  # Conocimiento
@@ -276,13 +303,23 @@ def main():
         st.info(analisis_conocimiento(sel))
         data_c = DATOS_CONOCIMIENTO.get(sel, {})
         df_c = pd.DataFrame([{"Aspirante": k, "Junio": v[0], "Diciembre": v[1]} for k, v in data_c.items()])
+        
+        # Crear mapeo de colores para aspirantes
+        color_map_aspirantes = {}
+        for aspirante in df_c["Aspirante"].unique():
+            if aspirante in COLOR_ASPIRANTES:
+                color_map_aspirantes[aspirante] = COLOR_ASPIRANTES[aspirante]
+        
         df_melt_c = df_c.melt(id_vars="Aspirante", var_name="Mes", value_name="%")
         order = df_c.sort_values("Diciembre", ascending=False)["Aspirante"].tolist()
-        fig_c = px.bar(df_melt_c, x="%", y="Aspirante", color="Mes", barmode="group", orientation='h',
-                       text_auto=True, height=650, category_orders={"Aspirante": order},
-                       color_discrete_map={"Junio": "#B0BEC5", "Diciembre": "#880E4F"})
+        
+        fig_c = px.bar(df_melt_c, x="%", y="Aspirante", color="Aspirante", facet_col="Mes",
+                       orientation='h', text_auto=True, height=650, 
+                       category_orders={"Aspirante": order},
+                       color_discrete_map=color_map_aspirantes)
         fig_c.update_traces(textposition='outside', textfont_size=14)
         fig_c.update_layout(showlegend=True)
+        fig_c.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
         st.plotly_chart(fig_c, use_container_width=True)
 
     with tabs[3]:  # Opinión
@@ -290,21 +327,116 @@ def main():
         st.info(analisis_opinion(sel))
 
         if sel == "GUERRERO (ESTATAL)":
-            st.markdown("#### 📈 Opinión Neta Estatal (Buena - Mala)")
-            df_neta = pd.DataFrame({
-                "Aspirante": list(DATOS_OPINION_ESTATAL.keys()),
-                "Junio": [v["Buena"][0] - v["Mala"][0] for v in DATOS_OPINION_ESTATAL.values()],
-                "Diciembre": [v["Buena"][1] - v["Mala"][1] for v in DATOS_OPINION_ESTATAL.values()]
-            })
-            df_neta_melt = df_neta.melt(id_vars="Aspirante", var_name="Mes", value_name="Neta")
-            order_neta = df_neta.sort_values("Diciembre", ascending=False)["Aspirante"].tolist()
-            fig_neta = px.bar(df_neta_melt, x="Neta", y="Aspirante", color="Mes", barmode="group",
-                              orientation='h', text_auto=True, height=600,
-                              category_orders={"Aspirante": order_neta},
-                              color_discrete_map={"Junio": "#B0BEC5", "Diciembre": "#880E4F"})
-            fig_neta.update_traces(textposition='outside', textfont_size=12)
-            fig_neta.update_layout(showlegend=True)
-            st.plotly_chart(fig_neta, use_container_width=True)
+            st.markdown("#### 📈 Opinión Positiva vs Negativa (Estatal)")
+            
+            # Crear DataFrame con opiniones Buena y Mala
+            data_opinion_comp = []
+            for asp, vals in DATOS_OPINION_ESTATAL.items():
+                data_opinion_comp.append({
+                    "Aspirante": asp,
+                    "Tipo": "Positiva (Buena)",
+                    "Junio": vals["Buena"][0],
+                    "Diciembre": vals["Buena"][1]
+                })
+                data_opinion_comp.append({
+                    "Aspirante": asp,
+                    "Tipo": "Negativa (Mala)",
+                    "Junio": vals["Mala"][0],
+                    "Diciembre": vals["Mala"][1]
+                })
+            
+            df_opinion_comp = pd.DataFrame(data_opinion_comp)
+            
+            # Ordenar por opinión positiva en Diciembre
+            orden_aspirantes = df_opinion_comp[df_opinion_comp["Tipo"] == "Positiva (Buena)"].sort_values("Diciembre", ascending=False)["Aspirante"].tolist()
+            
+            # Crear gráfica comparativa
+            fig_comp = go.Figure()
+            
+            # Colores para positiva y negativa
+            color_positiva_jun = "#B0BEC5"
+            color_positiva_dic = "#4CAF50"
+            color_negativa_jun = "#BDBDBD"
+            color_negativa_dic = "#F44336"
+            
+            for aspirante in orden_aspirantes:
+                df_asp = df_opinion_comp[df_opinion_comp["Aspirante"] == aspirante]
+                
+                # Positiva Junio
+                val_pos_jun = df_asp[df_asp["Tipo"] == "Positiva (Buena)"]["Junio"].values[0]
+                # Positiva Diciembre
+                val_pos_dic = df_asp[df_asp["Tipo"] == "Positiva (Buena)"]["Diciembre"].values[0]
+                # Negativa Junio
+                val_neg_jun = df_asp[df_asp["Tipo"] == "Negativa (Mala)"]["Junio"].values[0]
+                # Negativa Diciembre
+                val_neg_dic = df_asp[df_asp["Tipo"] == "Negativa (Mala)"]["Diciembre"].values[0]
+                
+                # Agregar barras
+                fig_comp.add_trace(go.Bar(
+                    name=f"{aspirante} - Positiva Jun",
+                    x=[val_pos_jun],
+                    y=[aspirante],
+                    orientation='h',
+                    marker_color=color_positiva_jun,
+                    text=val_pos_jun,
+                    textposition='outside',
+                    showlegend=False,
+                    offsetgroup=0
+                ))
+                
+                fig_comp.add_trace(go.Bar(
+                    name=f"{aspirante} - Positiva Dic",
+                    x=[val_pos_dic],
+                    y=[aspirante],
+                    orientation='h',
+                    marker_color=color_positiva_dic,
+                    text=val_pos_dic,
+                    textposition='outside',
+                    showlegend=False,
+                    offsetgroup=1
+                ))
+                
+                fig_comp.add_trace(go.Bar(
+                    name=f"{aspirante} - Negativa Jun",
+                    x=[-val_neg_jun],
+                    y=[aspirante],
+                    orientation='h',
+                    marker_color=color_negativa_jun,
+                    text=val_neg_jun,
+                    textposition='outside',
+                    showlegend=False,
+                    offsetgroup=0
+                ))
+                
+                fig_comp.add_trace(go.Bar(
+                    name=f"{aspirante} - Negativa Dic",
+                    x=[-val_neg_dic],
+                    y=[aspirante],
+                    orientation='h',
+                    marker_color=color_negativa_dic,
+                    text=val_neg_dic,
+                    textposition='outside',
+                    showlegend=False,
+                    offsetgroup=1
+                ))
+            
+            # Agregar leyenda manual
+            fig_comp.add_trace(go.Bar(name='Positiva Junio', x=[None], y=[None], marker_color=color_positiva_jun))
+            fig_comp.add_trace(go.Bar(name='Positiva Diciembre', x=[None], y=[None], marker_color=color_positiva_dic))
+            fig_comp.add_trace(go.Bar(name='Negativa Junio', x=[None], y=[None], marker_color=color_negativa_jun))
+            fig_comp.add_trace(go.Bar(name='Negativa Diciembre', x=[None], y=[None], marker_color=color_negativa_dic))
+            
+            fig_comp.update_layout(
+                barmode='relative',
+                height=700,
+                xaxis_title="Porcentaje (%)",
+                yaxis_title="",
+                yaxis={'categoryorder':'array', 'categoryarray':orden_aspirantes},
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            
+            st.plotly_chart(fig_comp, use_container_width=True)
 
             st.markdown("#### Detalle por Aspirante")
             for asp, vals in DATOS_OPINION_ESTATAL.items():
@@ -322,14 +454,23 @@ def main():
         else:
             data_op = DATOS_OPINION_MUNICIPAL.get(sel, {})
             df_op = pd.DataFrame([{"Aspirante": k, "Junio": v[0], "Diciembre": v[1]} for k, v in data_op.items()])
+            
+            # Mapear colores de aspirantes
+            color_map_op = {}
+            for aspirante in df_op["Aspirante"].unique():
+                if aspirante in COLOR_ASPIRANTES:
+                    color_map_op[aspirante] = COLOR_ASPIRANTES[aspirante]
+            
             df_melt = df_op.melt(id_vars="Aspirante", var_name="Mes", value_name="% Positiva")
             order = df_op.sort_values("Diciembre", ascending=False)["Aspirante"].tolist()
-            fig_op = px.bar(df_melt, x="% Positiva", y="Aspirante", color="Mes", barmode="group",
+            
+            fig_op = px.bar(df_melt, x="% Positiva", y="Aspirante", color="Aspirante", facet_col="Mes",
                             orientation='h', text_auto=True, height=600,
                             category_orders={"Aspirante": order},
-                            color_discrete_map={"Junio": "#B0BEC5", "Diciembre": "#880E4F"})
+                            color_discrete_map=color_map_op)
             fig_op.update_traces(textposition='outside', textfont_size=12)
             fig_op.update_layout(showlegend=True)
+            fig_op.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
             st.plotly_chart(fig_op, use_container_width=True)
 
     with tabs[4]:  # Atributos
