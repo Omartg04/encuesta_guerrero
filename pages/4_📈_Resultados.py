@@ -378,7 +378,7 @@ def main():
                     y=[aspirante],
                     orientation='h',
                     marker_color=color_positiva_jun,
-                    text=val_pos_jun,
+                    text=[f"{val_pos_jun}"],
                     textposition='outside',
                     showlegend=False,
                     offsetgroup=0
@@ -390,7 +390,7 @@ def main():
                     y=[aspirante],
                     orientation='h',
                     marker_color=color_positiva_dic,
-                    text=val_pos_dic,
+                    text=[f"{val_pos_dic}"],
                     textposition='outside',
                     showlegend=False,
                     offsetgroup=1
@@ -402,7 +402,7 @@ def main():
                     y=[aspirante],
                     orientation='h',
                     marker_color=color_negativa_jun,
-                    text=val_neg_jun,
+                    text=[f"{val_neg_jun}"],
                     textposition='outside',
                     showlegend=False,
                     offsetgroup=0
@@ -414,7 +414,7 @@ def main():
                     y=[aspirante],
                     orientation='h',
                     marker_color=color_negativa_dic,
-                    text=val_neg_dic,
+                    text=[f"{val_neg_dic}"],
                     textposition='outside',
                     showlegend=False,
                     offsetgroup=1
