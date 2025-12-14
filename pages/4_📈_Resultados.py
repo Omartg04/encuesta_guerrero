@@ -254,6 +254,7 @@ def main():
         df_melt_p = df_p.melt(id_vars="Problema", var_name="Mes", value_name="%")
         fig_p = px.bar(df_melt_p, x="%", y="Problema", color="Mes", barmode="group", orientation='h',
                        text_auto=True, height=500, color_discrete_map={"Junio": "#B0BEC5", "Diciembre": "#880E4F"})
+        fig_p.update_traces(textposition='outside', textfont_size=12)
         st.plotly_chart(fig_p, use_container_width=True)
 
     with tabs[1]:  # Partidos
@@ -263,10 +264,11 @@ def main():
         df_v = pd.DataFrame([{"Partido": k, "Junio": v[0], "Diciembre": v[1]} for k, v in data_v.items()])
         df_melt_v = df_v.melt(id_vars="Partido", var_name="Mes", value_name="%")
         order = df_v.sort_values("Diciembre", ascending=False)["Partido"].tolist()
-        fig_v = px.bar(df_melt_v, x="%", y="Partido", color="Partido", barmode="group", orientation='h',
+        fig_v = px.bar(df_melt_v, x="%", y="Partido", color="Mes", barmode="group", orientation='h',
                        text_auto=True, height=600, category_orders={"Partido": order},
-                       color_discrete_map=COLOR_PARTIDOS)
-        fig_v.update_layout(showlegend=False)
+                       color_discrete_map={"Junio": "#B0BEC5", "Diciembre": "#880E4F"})
+        fig_v.update_traces(textposition='outside', textfont_size=12)
+        fig_v.update_layout(showlegend=True)
         st.plotly_chart(fig_v, use_container_width=True)
 
     with tabs[2]:  # Conocimiento
@@ -276,11 +278,11 @@ def main():
         df_c = pd.DataFrame([{"Aspirante": k, "Junio": v[0], "Diciembre": v[1]} for k, v in data_c.items()])
         df_melt_c = df_c.melt(id_vars="Aspirante", var_name="Mes", value_name="%")
         order = df_c.sort_values("Diciembre", ascending=False)["Aspirante"].tolist()
-        fig_c = px.bar(df_melt_c, x="%", y="Aspirante", color="Aspirante", barmode="group", orientation='h',
-                       text="%", height=650, category_orders={"Aspirante": order},
-                       color_discrete_map=COLOR_ASPIRANTES)
-        fig_c.update_traces(textfont_size=14, textposition='outside')
-        fig_c.update_layout(showlegend=False)
+        fig_c = px.bar(df_melt_c, x="%", y="Aspirante", color="Mes", barmode="group", orientation='h',
+                       text_auto=True, height=650, category_orders={"Aspirante": order},
+                       color_discrete_map={"Junio": "#B0BEC5", "Diciembre": "#880E4F"})
+        fig_c.update_traces(textposition='outside', textfont_size=14)
+        fig_c.update_layout(showlegend=True)
         st.plotly_chart(fig_c, use_container_width=True)
 
     with tabs[3]:  # Opinión
@@ -296,10 +298,12 @@ def main():
             })
             df_neta_melt = df_neta.melt(id_vars="Aspirante", var_name="Mes", value_name="Neta")
             order_neta = df_neta.sort_values("Diciembre", ascending=False)["Aspirante"].tolist()
-            fig_neta = px.bar(df_neta_melt, x="Neta", y="Aspirante", color="Aspirante", barmode="group",
+            fig_neta = px.bar(df_neta_melt, x="Neta", y="Aspirante", color="Mes", barmode="group",
                               orientation='h', text_auto=True, height=600,
-                              category_orders={"Aspirante": order_neta}, color_discrete_map=COLOR_ASPIRANTES)
-            fig_neta.update_layout(showlegend=False)
+                              category_orders={"Aspirante": order_neta},
+                              color_discrete_map={"Junio": "#B0BEC5", "Diciembre": "#880E4F"})
+            fig_neta.update_traces(textposition='outside', textfont_size=12)
+            fig_neta.update_layout(showlegend=True)
             st.plotly_chart(fig_neta, use_container_width=True)
 
             st.markdown("#### Detalle por Aspirante")
@@ -313,16 +317,19 @@ def main():
                     col3.metric("Cambio", f"{net_dic - net_jun:+}")
                     df_op = pd.DataFrame([{"Opinión": k, "Junio": v[0], "Diciembre": v[1]} for k, v in vals.items()])
                     fig_op = px.bar(df_op, x="Opinión", y=["Junio", "Diciembre"], barmode='group', height=300)
+                    fig_op.update_traces(texttemplate='%{y}', textposition='outside', textfont_size=12)
                     st.plotly_chart(fig_op, use_container_width=True)
         else:
             data_op = DATOS_OPINION_MUNICIPAL.get(sel, {})
             df_op = pd.DataFrame([{"Aspirante": k, "Junio": v[0], "Diciembre": v[1]} for k, v in data_op.items()])
             df_melt = df_op.melt(id_vars="Aspirante", var_name="Mes", value_name="% Positiva")
             order = df_op.sort_values("Diciembre", ascending=False)["Aspirante"].tolist()
-            fig_op = px.bar(df_melt, x="% Positiva", y="Aspirante", color="Aspirante", barmode="group",
+            fig_op = px.bar(df_melt, x="% Positiva", y="Aspirante", color="Mes", barmode="group",
                             orientation='h', text_auto=True, height=600,
-                            category_orders={"Aspirante": order}, color_discrete_map=COLOR_ASPIRANTES)
-            fig_op.update_layout(showlegend=False)
+                            category_orders={"Aspirante": order},
+                            color_discrete_map={"Junio": "#B0BEC5", "Diciembre": "#880E4F"})
+            fig_op.update_traces(textposition='outside', textfont_size=12)
+            fig_op.update_layout(showlegend=True)
             st.plotly_chart(fig_op, use_container_width=True)
 
     with tabs[4]:  # Atributos
@@ -472,18 +479,21 @@ def main():
             st.markdown("##### Edad")
             df = pd.DataFrame([{"Rango": k, "Junio": v[0], "Diciembre": v[1]} for k, v in DATOS_SOCIODEM["Edad"].items()])
             fig = px.bar(df, x="Rango", y=["Junio", "Diciembre"], barmode='group', height=400)
+            fig.update_traces(textposition='outside', textfont_size=12)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
             st.markdown("##### Sexo")
             df = pd.DataFrame([{"Sexo": k, "Junio": v[0], "Diciembre": v[1]} for k, v in DATOS_SOCIODEM["Sexo"].items()])
             fig = px.bar(df, x="Sexo", y=["Junio", "Diciembre"], barmode='group', height=400)
+            fig.update_traces(textposition='outside', textfont_size=12)
             st.plotly_chart(fig, use_container_width=True)
 
         with col3:
             st.markdown("##### NSE")
             df = pd.DataFrame([{"NSE": k, "Junio": v[0], "Diciembre": v[1]} for k, v in DATOS_SOCIODEM["NSE"].items()])
             fig = px.bar(df, x="NSE", y=["Junio", "Diciembre"], barmode='group', height=400)
+            fig.update_traces(textposition='outside', textfont_size=12)
             st.plotly_chart(fig, use_container_width=True)
 
     with tabs[8]:  # Careo
@@ -496,9 +506,9 @@ def main():
             st.markdown("##### Careo 1: Félix Salgado vs Oposición")
             df_c1 = pd.DataFrame(list(DATOS_CAREO_1[sel].items()), columns=["Candidato", "%"])
             df_c1 = df_c1.sort_values("%", ascending=False)
-            fig_c1 = px.bar(df_c1, x="%", y="Candidato", orientation='h', text="%", height=600,
+            fig_c1 = px.bar(df_c1, x="%", y="Candidato", orientation='h', text_auto=True, height=600,
                             color="Candidato", color_discrete_map=COLOR_ASPIRANTES)
-            fig_c1.update_traces(textposition='outside', texttemplate='%{text:.1f}%')
+            fig_c1.update_traces(textposition='outside', textfont_size=12)
             fig_c1.update_layout(showlegend=False)
             st.plotly_chart(fig_c1, use_container_width=True)
 
@@ -506,9 +516,9 @@ def main():
             st.markdown("##### Careo 2: Iván Hernández vs Oposición")
             df_c2 = pd.DataFrame(list(DATOS_CAREO_2[sel].items()), columns=["Candidato", "%"])
             df_c2 = df_c2.sort_values("%", ascending=False)
-            fig_c2 = px.bar(df_c2, x="%", y="Candidato", orientation='h', text="%", height=600,
+            fig_c2 = px.bar(df_c2, x="%", y="Candidato", orientation='h', text_auto=True, height=600,
                             color="Candidato", color_discrete_map=COLOR_ASPIRANTES)
-            fig_c2.update_traces(textposition='outside', texttemplate='%{text:.1f}%')
+            fig_c2.update_traces(textposition='outside', textfont_size=12)
             fig_c2.update_layout(showlegend=False)
             st.plotly_chart(fig_c2, use_container_width=True)
 
