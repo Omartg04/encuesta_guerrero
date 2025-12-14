@@ -194,7 +194,7 @@ def analisis_problemas(sel):
 def analisis_partidos(sel):
     data = DATOS_VOTO_GOB.get(sel, {})
     if not data: return "No hay datos disponibles."
-    return f"**Análisis:** MORENA consolida su liderazgo con {data['MORENA'][1]}% (+{data['MORENA'][1]-data['MORENA'][0']} pts). Los partidos tradicionales pierden terreno."
+    return f"**Análisis:** MORENA consolida su liderazgo con {data['MORENA'][1]}% (+{data['MORENA'][1]-data['MORENA'][0]} pts). Los partidos tradicionales pierden terreno."
 
 def analisis_conocimiento(sel):
     data = DATOS_CONOCIMIENTO.get(sel, {})
@@ -230,7 +230,7 @@ def analisis_sociodem():
 
 def analisis_careo(sel):
     c1 = DATOS_CAREO_1[sel].get("Félix Salgado Macedonio (MORENA)", 0)
-    c2 = DATOS_CAREO_2[sel]["Iván Hernández Díaz (MORENA)"]
+    c2 = DATOS_CAREO_2[sel].get("Iván Hernández Díaz (MORENA)", 0)
     return f"**Análisis:** Iván Hernández Díaz muestra mayor competitividad ({c2}%) que Félix Salgado ({c1}%) en careo directo."
 
 # ==============================================================================
@@ -391,50 +391,77 @@ def main():
     with tabs[6]:  # Evaluación Autoridades
         st.subheader("Evaluación de Autoridades")
         st.info(analisis_autoridades(sel))
-        # (código original de autoridades mantenido – funciona perfectamente)
 
         # Presidenta
+        st.markdown("#### 🇲🇽 Presidenta de México")
         if sel in DATOS_AUTORIDADES["Presidenta"]:
-            data = DATOS_AUTORIDADES["Presidenta"][sel]
-            st.markdown("#### Presidenta de México")
-            col1, col2 = st.columns(2)
-            col1.metric("Aprueba Dic", f"{data['Aprueba'][1]}%")
-            col2.metric("Desaprueba Dic", f"{data['Desaprueba'][1]}%")
-            df = pd.DataFrame([{"Categoría": k, "Junio": v[0], "Diciembre": v[1]} for k, v in data.items()])
-            fig = px.bar(df, x="Categoría", y=["Junio", "Diciembre"], barmode='group')
-            st.plotly_chart(fig, use_container_width=True)
+            data_pres = DATOS_AUTORIDADES["Presidenta"][sel]
+            df_pres = pd.DataFrame([
+                {"Categoría": "Aprueba", "Junio": data_pres["Aprueba"][0], "Diciembre": data_pres["Aprueba"][1]},
+                {"Categoría": "Desaprueba", "Junio": data_pres["Desaprueba"][0], "Diciembre": data_pres["Desaprueba"][1]},
+                {"Categoría": "No sabe", "Junio": data_pres["No sabe"][0], "Diciembre": data_pres["No sabe"][1]}
+            ])
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Aprueba Jun", f"{data_pres['Aprueba'][0]}%")
+            col2.metric("Aprueba Dic", f"{data_pres['Aprueba'][1]}%", delta=f"{data_pres['Aprueba'][1]-data_pres['Aprueba'][0]} pts")
+            col3.metric("Desaprueba Dic", f"{data_pres['Desaprueba'][1]}%")
+            fig_pres = go.Figure()
+            fig_pres.add_trace(go.Bar(name='Junio', x=df_pres["Categoría"], y=df_pres["Junio"], marker_color='#B0BEC5'))
+            fig_pres.add_trace(go.Bar(name='Diciembre', x=df_pres["Categoría"], y=df_pres["Diciembre"], marker_color='#880E4F'))
+            fig_pres.update_layout(barmode='group', height=300)
+            st.plotly_chart(fig_pres, use_container_width=True)
+
+        st.divider()
 
         # Gobernadora
+        st.markdown("#### 🏛️ Gobernadora de Guerrero")
         if sel in DATOS_AUTORIDADES["Gobernadora"]:
-            data = DATOS_AUTORIDADES["Gobernadora"][sel]
-            st.markdown("#### Gobernadora de Guerrero")
-            col1, col2 = st.columns(2)
-            col1.metric("Aprueba Dic", f"{data['Aprueba'][1]}%")
-            col2.metric("Desaprueba Dic", f"{data['Desaprueba'][1]}%")
-            df = pd.DataFrame([{"Categoría": k, "Junio": v[0], "Diciembre": v[1]} for k, v in data.items()])
-            fig = px.bar(df, x="Categoría", y=["Junio", "Diciembre"], barmode='group')
-            st.plotly_chart(fig, use_container_width=True)
+            data_gob = DATOS_AUTORIDADES["Gobernadora"][sel]
+            df_gob = pd.DataFrame([
+                {"Categoría": "Aprueba", "Junio": data_gob["Aprueba"][0], "Diciembre": data_gob["Aprueba"][1]},
+                {"Categoría": "Desaprueba", "Junio": data_gob["Desaprueba"][0], "Diciembre": data_gob["Desaprueba"][1]},
+                {"Categoría": "No sabe", "Junio": data_gob["No sabe"][0], "Diciembre": data_gob["No sabe"][1]}
+            ])
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Aprueba Jun", f"{data_gob['Aprueba'][0]}%")
+            col2.metric("Aprueba Dic", f"{data_gob['Aprueba'][1]}%", delta=f"{data_gob['Aprueba'][1]-data_gob['Aprueba'][0]} pts")
+            col3.metric("Desaprueba Dic", f"{data_gob['Desaprueba'][1]}%")
+            fig_gob = go.Figure()
+            fig_gob.add_trace(go.Bar(name='Junio', x=df_gob["Categoría"], y=df_gob["Junio"], marker_color='#B0BEC5'))
+            fig_gob.add_trace(go.Bar(name='Diciembre', x=df_gob["Categoría"], y=df_gob["Diciembre"], marker_color='#880E4F'))
+            fig_gob.update_layout(barmode='group', height=300)
+            st.plotly_chart(fig_gob, use_container_width=True)
 
-        # Presidentes Municipales (si aplica)
+        st.divider()
+
+        # Presidentes Municipales
         if sel == "ACAPULCO":
-            data = DATOS_AUTORIDADES["Pres. Municipal Acapulco"]["ACAPULCO"]
-            st.markdown("#### Pdte. Municipal Acapulco")
+            st.markdown("#### 🏙️ Presidente Municipal de Acapulco")
+            data_pm = DATOS_AUTORIDADES["Pres. Municipal Acapulco"]["ACAPULCO"]
         elif sel == "CHILPANCINGO":
-            data = DATOS_AUTORIDADES["Pres. Municipal Chilpancingo"]["CHILPANCINGO"]
-            st.markdown("#### Pdte. Municipal Chilpancingo")
+            st.markdown("#### 🏙️ Presidente Municipal de Chilpancingo")
+            data_pm = DATOS_AUTORIDADES["Pres. Municipal Chilpancingo"]["CHILPANCINGO"]
         elif sel == "IGUALA":
-            data = DATOS_AUTORIDADES["Pres. Municipal Iguala"]["IGUALA"]
-            st.markdown("#### Pdte. Municipal Iguala")
+            st.markdown("#### 🏙️ Presidente Municipal de Iguala")
+            data_pm = DATOS_AUTORIDADES["Pres. Municipal Iguala"]["IGUALA"]
         else:
-            data = None
+            data_pm = None
 
-        if data:
-            col1, col2 = st.columns(2)
-            col1.metric("Aprueba Dic", f"{data['Aprueba'][1]}%")
-            col2.metric("Desaprueba Dic", f"{data['Desaprueba'][1]}%")
-            df = pd.DataFrame([{"Categoría": k, "Junio": v[0], "Diciembre": v[1]} for k, v in data.items()])
-            fig = px.bar(df, x="Categoría", y=["Junio", "Diciembre"], barmode='group')
-            st.plotly_chart(fig, use_container_width=True)
+        if data_pm:
+            df_pm = pd.DataFrame([
+                {"Categoría": "Aprueba", "Junio": data_pm["Aprueba"][0], "Diciembre": data_pm["Aprueba"][1]},
+                {"Categoría": "Desaprueba", "Junio": data_pm["Desaprueba"][0], "Diciembre": data_pm["Desaprueba"][1]},
+                {"Categoría": "No sabe", "Junio": data_pm["No sabe"][0], "Diciembre": data_pm["No sabe"][1]}
+            ])
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Aprueba Jun", f"{data_pm['Aprueba'][0]}%")
+            col2.metric("Aprueba Dic", f"{data_pm['Aprueba'][1]}%", delta=f"{data_pm['Aprueba'][1]-data_pm['Aprueba'][0]} pts")
+            col3.metric("Desaprueba Dic", f"{data_pm['Desaprueba'][1]}%")
+            fig_pm = go.Figure()
+            fig_pm.add_trace(go.Bar(name='Junio', x=df_pm["Categoría"], y=df_pm["Junio"], marker_color='#B0BEC5'))
+            fig_pm.add_trace(go.Bar(name='Diciembre', x=df_pm["Categoría"], y=df_pm["Diciembre"], marker_color='#880E4F'))
+            fig_pm.update_layout(barmode='group', height=300)
+            st.plotly_chart(fig_pm, use_container_width=True)
 
     with tabs[7]:  # Sociodemográficos
         st.subheader("Perfil Sociodemográfico")
@@ -444,19 +471,19 @@ def main():
         with col1:
             st.markdown("##### Edad")
             df = pd.DataFrame([{"Rango": k, "Junio": v[0], "Diciembre": v[1]} for k, v in DATOS_SOCIODEM["Edad"].items()])
-            fig = px.bar(df, x="Rango", y=["Junio", "Diciembre"], barmode='group')
+            fig = px.bar(df, x="Rango", y=["Junio", "Diciembre"], barmode='group', height=400)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
             st.markdown("##### Sexo")
             df = pd.DataFrame([{"Sexo": k, "Junio": v[0], "Diciembre": v[1]} for k, v in DATOS_SOCIODEM["Sexo"].items()])
-            fig = px.bar(df, x="Sexo", y=["Junio", "Diciembre"], barmode='group')
+            fig = px.bar(df, x="Sexo", y=["Junio", "Diciembre"], barmode='group', height=400)
             st.plotly_chart(fig, use_container_width=True)
 
         with col3:
             st.markdown("##### NSE")
             df = pd.DataFrame([{"NSE": k, "Junio": v[0], "Diciembre": v[1]} for k, v in DATOS_SOCIODEM["NSE"].items()])
-            fig = px.bar(df, x="NSE", y=["Junio", "Diciembre"], barmode='group')
+            fig = px.bar(df, x="NSE", y=["Junio", "Diciembre"], barmode='group', height=400)
             st.plotly_chart(fig, use_container_width=True)
 
     with tabs[8]:  # Careo
