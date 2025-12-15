@@ -3,6 +3,15 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
+# 1. IMPORTAR LA FUNCIÓN DE SEGURIDAD
+from src.auth import bloquear_acceso 
+
+# Configuración de página
+st.set_page_config(page_title="Resultados Finales 2025", layout="wide")
+
+# 2. ACTIVAR EL BLOQUEO (Esto pedirá usuario y contraseña antes de mostrar nada)
+bloquear_acceso()
+
 # --- CONFIGURACIÓN DE PÁGINA Y ESTILO ---
 st.set_page_config(page_title="Resultados Finales Guerrero 2025", layout="wide", page_icon="📊")
 
