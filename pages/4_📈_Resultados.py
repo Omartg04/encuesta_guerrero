@@ -518,35 +518,97 @@ def main():
                     ))
                 st.plotly_chart(estilo_pro(fig_slope, height=600), use_container_width=True)
 
-    # 7. AUTORIDADES --------------------------------------------------------------
+# 7. AUTORIDADES --------------------------------------------------------------
     with tabs[6]:
         st.subheader("Aprobación de Autoridades")
         
+        # --- SECCIÓN 1: PRESIDENTA DE MÉXICO ---
         with st.container(border=True):
             st.markdown("#### 🇲🇽 Presidenta de México")
             if sel in DATOS_AUTORIDADES["Presidenta"]:
                 d = DATOS_AUTORIDADES["Presidenta"][sel]
-                col1, col2 = st.columns(2)
-                col1.metric("Aprobación", f"{d['Aprueba'][1]}%")
-                col2.metric("Desaprobación", f"{d['Desaprueba'][1]}%")
                 
-                df = pd.DataFrame([{"Cat": k, "Jun": v[0], "Dic": v[1]} for k,v in d.items()])
+                # KPIs
+                apr_dic = d['Aprueba'][1]
+                apr_jun = d['Aprueba'][0]
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Aprobación (Dic)", f"{apr_dic}%", delta=f"{apr_dic - apr_jun:.1f} pts vs Jun")
+                col2.metric("Desaprobación", f"{d['Desaprueba'][1]}%")
+                col3.metric("No sabe", f"{d['No sabe'][1]}%")
+                
+                # Gráfica
+                df = pd.DataFrame([{"Cat": k, "Junio": v[0], "Diciembre": v[1]} for k,v in d.items()])
                 fig = go.Figure(data=[
-                    go.Bar(name='Junio', x=df["Cat"], y=df["Jun"], marker_color='#B0BEC5', text=df["Jun"], textposition='auto'),
-                    go.Bar(name='Diciembre', x=df["Cat"], y=df["Dic"], marker_color='#880E4F', text=df["Dic"], textposition='auto')
+                    go.Bar(name='Junio', x=df["Cat"], y=df["Junio"], marker_color='#B0BEC5', text=df["Junio"], textposition='auto'),
+                    go.Bar(name='Diciembre', x=df["Cat"], y=df["Diciembre"], marker_color='#880E4F', text=df["Diciembre"], textposition='auto')
                 ])
-                st.plotly_chart(estilo_pro(fig, height=350), use_container_width=True)
+                fig.update_layout(barmode='group')
+                st.plotly_chart(estilo_pro(fig, height=350, legend_bottom=True), use_container_width=True)
 
+        # --- SECCIÓN 2: GOBERNADORA ---
         with st.container(border=True):
-            st.markdown("#### 🏛️ Gobernadora")
+            st.markdown("#### 🏛️ Gobernadora del Estado")
             if sel in DATOS_AUTORIDADES["Gobernadora"]:
                 d = DATOS_AUTORIDADES["Gobernadora"][sel]
-                df = pd.DataFrame([{"Cat": k, "Jun": v[0], "Dic": v[1]} for k,v in d.items()])
+                
+                # KPIs
+                apr_dic = d['Aprueba'][1]
+                apr_jun = d['Aprueba'][0]
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Aprobación (Dic)", f"{apr_dic}%", delta=f"{apr_dic - apr_jun:.1f} pts vs Jun")
+                col2.metric("Desaprobación", f"{d['Desaprueba'][1]}%", delta_color="inverse")
+                col3.metric("No sabe", f"{d['No sabe'][1]}%")
+
+                # Gráfica
+                df = pd.DataFrame([{"Cat": k, "Junio": v[0], "Diciembre": v[1]} for k,v in d.items()])
                 fig = go.Figure(data=[
-                    go.Bar(name='Junio', x=df["Cat"], y=df["Jun"], marker_color='#B0BEC5'),
-                    go.Bar(name='Diciembre', x=df["Cat"], y=df["Dic"], marker_color='#880E4F', text=df["Dic"], textposition='auto')
+                    go.Bar(name='Junio', x=df["Cat"], y=df["Junio"], marker_color='#B0BEC5', text=df["Junio"], textposition='auto'),
+                    go.Bar(name='Diciembre', x=df["Cat"], y=df["Diciembre"], marker_color='#880E4F', text=df["Diciembre"], textposition='auto')
                 ])
-                st.plotly_chart(estilo_pro(fig, height=350), use_container_width=True)
+                fig.update_layout(barmode='group')
+                st.plotly_chart(estilo_pro(fig, height=350, legend_bottom=True), use_container_width=True)
+
+        # --- SECCIÓN 3: PRESIDENTES MUNICIPALES ---
+        if sel in ["ACAPULCO", "CHILPANCINGO", "IGUALA"]:
+            with st.container(border=True):
+                st.markdown(f"#### 🏙️ Presidente Municipal de {sel.title()}")
+                
+                # Obtener datos específicos del diccionario actualizado "Alcaldes"
+                d_alc = DATOS_AUTORIDADES["Alcaldes"].get(sel, {})
+                
+                if d_alc:
+                    # KPIs
+                    apr_dic = d_alc['Aprueba'][1]
+                    apr_jun = d_alc['Aprueba'][0]
+                    des_dic = d_alc['Desaprueba'][1]
+                    des_jun = d_alc['Desaprueba'][0]
+                    
+                    col1, col2, col3 = st.columns(3)
+                    # Lógica de color para delta: si baja la aprobación es rojo (normal), si sube es verde
+                    col1.metric("Aprobación (Dic)", f"{apr_dic}%", delta=f"{apr_dic - apr_jun:.1f} pts vs Jun")
+                    # Lógica inversa para desaprobación: si sube es malo (rojo/inverse)
+                    col2.metric("Desaprobación (Dic)", f"{des_dic}%", delta=f"{des_dic - des_jun:.1f} pts", delta_color="inverse")
+                    col3.metric("No sabe / NR", f"{d_alc['No sabe'][1]}%")
+
+                    # Gráfica
+                    df_alc = pd.DataFrame([
+                        {"Categoría": "Aprueba", "Junio": d_alc["Aprueba"][0], "Diciembre": d_alc["Aprueba"][1]},
+                        {"Categoría": "Desaprueba", "Junio": d_alc["Desaprueba"][0], "Diciembre": d_alc["Desaprueba"][1]},
+                        {"Categoría": "NS/NR", "Junio": d_alc["No sabe"][0], "Diciembre": d_alc["No sabe"][1]}
+                    ])
+                    
+                    fig_alc = go.Figure(data=[
+                        go.Bar(name='Junio', x=df_alc["Categoría"], y=df_alc["Junio"], 
+                               marker_color='#B0BEC5', text=df_alc["Junio"], textposition='auto'),
+                        go.Bar(name='Diciembre', x=df_alc["Categoría"], y=df_alc["Diciembre"], 
+                               marker_color='#880E4F', text=df_alc["Diciembre"], textposition='auto')
+                    ])
+                    
+                    fig_alc.update_layout(barmode='group')
+                    st.plotly_chart(estilo_pro(fig_alc, height=350, legend_bottom=True), use_container_width=True)
+        else:
+            # Mensaje informativo si están en vista ESTATAL
+            st.info("ℹ️ Para ver la evaluación específica de los Presidentes Municipales, seleccione un municipio (Acapulco, Chilpancingo o Iguala) en el menú lateral.")
 
     # 8. SOCIODEM -----------------------------------------------------------------
     with tabs[7]:
