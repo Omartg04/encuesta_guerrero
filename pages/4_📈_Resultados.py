@@ -162,11 +162,12 @@ DATOS_AUTORIDADES = {
         "CHILPANCINGO": {"Aprueba": [34, 35], "Desaprueba": [58, 59], "No sabe": [8, 6]},
         "IGUALA": {"Aprueba": [50, 41], "Desaprueba": [37, 50], "No sabe": [13, 8]}
     },
-    "Pres. Municipal Acapulco": {"ACAPULCO": {"Aprueba": [24, 22], "Desaprueba": [71, 75], "No sabe": [5, 3]}},
-    "Pres. Municipal Chilpancingo": {"CHILPANCINGO": {"Aprueba": [37, 19], "Desaprueba": [52, 74], "No sabe": [11, 8]}},
-    "Pres. Municipal Iguala": {"IGUALA": {"Aprueba": [39, 30], "Desaprueba": [51, 59], "No sabe": [10, 11]}}
+    "Alcaldes": {
+        "ACAPULCO": {"Aprueba": [24, 22], "Desaprueba": [71, 75], "No sabe": [5, 3]},
+        "CHILPANCINGO": {"Aprueba": [37, 19], "Desaprueba": [52, 74], "No sabe": [11, 8]},
+        "IGUALA": {"Aprueba": [39, 30], "Desaprueba": [51, 59], "No sabe": [10, 11]}
+    }
 }
-
 # 8. SOCIODEMOGRÁFICOS
 DATOS_SOCIODEM = {
     "Edad": {
