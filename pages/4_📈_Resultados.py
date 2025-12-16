@@ -252,7 +252,7 @@ def generar_excel_maestro():
     """Genera un archivo Excel con múltiples hojas basado en los diccionarios de datos."""
     output = io.BytesIO()
     # Usamos el motor xlsxwriter que es muy compatible con Streamlit
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
         
         # 1. PROBLEMAS
         rows = []
