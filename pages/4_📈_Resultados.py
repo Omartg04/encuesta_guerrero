@@ -365,17 +365,22 @@ def analisis_partidos(sel):
     return f"**MORENA** consolida su hegemonía alcanzando el **{data['MORENA'][1]}%** de preferencia efectiva, creciendo +{data['MORENA'][1]-data['MORENA'][0]} puntos."
 
 # ==============================================================================
-# 🚀 APP STREAMLIT
+# 🚀 APP STREAMLIT (Función Principal Unificada)
 # ==============================================================================
 def main():
     st.title("📊 Resultados Finales: Guerrero 2025")
     st.markdown("### Tablero Estratégico de Encuesta")
 
+    # --- SIDEBAR UNIFICADO ---
     with st.sidebar:
         st.header("🔍 Configuración")
+        
+        # 1. Selector (SOLO UNA VEZ)
         sel = st.selectbox("Seleccionar Territorio:", ["GUERRERO (ESTATAL)", "ACAPULCO", "CHILPANCINGO", "IGUALA"])
         
         st.divider()
+        
+        # 2. Ficha Técnica
         st.subheader("📋 Ficha Técnica")
         st.markdown("""
         **Levantamiento:** Diciembre 2025
@@ -387,29 +392,26 @@ def main():
         
         **Metodología:** Encuesta en vivienda
         """)
+        
+        st.divider()
+        
+        # 3. Botón de Descarga
+        st.subheader("📥 Descargar Datos")
+        try:
+            excel_data = generar_excel_maestro()
+            st.download_button(
+                label="Descargar Base Maestra (XLSX)",
+                data=excel_data,
+                file_name="Resultados_Guerrero_2025.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                icon="💾"
+            )
+        except Exception as e:
+            st.error(f"Error al generar Excel: {e}")
+
         st.info("💡 Use las pestañas superiores para navegar por los módulos.")
 
-    with st.sidebar:
-        st.header("🔍 Configuración")
-        sel = st.selectbox("Seleccionar Territorio:", ["GUERRERO (ESTATAL)", "ACAPULCO", "CHILPANCINGO", "IGUALA"])
-        
-        st.divider()
-        st.subheader("📋 Ficha Técnica")
-        # ... (tu texto de ficha técnica) ...
-        
-        st.divider()
-        
-        # --- BOTÓN DE DESCARGA ---
-        st.subheader("📥 Descargar Datos")
-        excel_data = generar_excel_maestro()
-        st.download_button(
-            label="Descargar Base Maestra (XLSX)",
-            data=excel_data,
-            file_name="Resultados_Guerrero_2025.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            icon="💾"
-        )
-
+    # --- PESTAÑAS PRINCIPALES ---
     tabs = st.tabs(["🚨 Problemas", "🏛️ Partidos", "🧠 Conocimiento", "💭 Opinión", "✨ Atributos", "🗳️ Interna", "👔 Autoridades", "📊 Sociodem", "⚔️ Careo"])
 
     # 1. PROBLEMAS ----------------------------------------------------------------
@@ -418,7 +420,6 @@ def main():
         
         data_p = DATOS_PROBLEMAS.get(sel, {})
         if data_p:
-            # KPIs
             top_prob = max(data_p.items(), key=lambda x: x[1][1])
             col1, col2, col3 = st.columns(3)
             col1.metric("Principal Problema", top_prob[0])
@@ -440,7 +441,6 @@ def main():
         data_v = DATOS_VOTO_GOB.get(sel, {})
         
         if data_v:
-            # KPIs
             morena_val = data_v["MORENA"][1]
             pri_val = data_v["PRI"][1]
             col1, col2, col3 = st.columns(3)
@@ -461,7 +461,6 @@ def main():
                             color_discrete_map=color_map_partidos)
                 fig_v.update_traces(textposition='outside', textfont_size=12)
                 fig_v.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
-                # Eliminamos la leyenda porque los nombres ya están en el eje Y
                 st.plotly_chart(estilo_pro(fig_v, height=600, show_legend=False), use_container_width=True)
 
     # 3. CONOCIMIENTO -------------------------------------------------------------
@@ -490,7 +489,6 @@ def main():
                             color_discrete_map=color_map_aspirantes)
                 fig_c.update_traces(textposition='outside')
                 fig_c.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
-                # Leyenda redundante (nombres en eje Y), eliminada
                 st.plotly_chart(estilo_pro(fig_c, height=650, show_legend=False), use_container_width=True)
 
     # 4. OPINIÓN ------------------------------------------------------------------
@@ -521,7 +519,6 @@ def main():
                     fig_comp.add_trace(go.Bar(y=[asp], x=[-df_asp[df_asp["Tipo"]=="Negativa"]["Diciembre"].values[0]], orientation='h', name="Negativa Dic", marker_color="#C62828", texttemplate="%{x}%", textposition="inside"))
                 
                 fig_comp.update_layout(barmode='relative', title="Balance Diciembre (Positiva vs Negativa)", yaxis={'categoryorder':'array', 'categoryarray':orden_aspirantes})
-                # Leyenda movida abajo para que no estorbe
                 st.plotly_chart(estilo_pro(fig_comp, height=600, legend_bottom=True), use_container_width=True)
 
         else:
@@ -536,7 +533,6 @@ def main():
                 fig_op = px.bar(df_melt, x="% Positiva", y="Aspirante", color="Aspirante", facet_col="Mes",
                                 orientation='h', text_auto=True, category_orders={"Aspirante": order},
                                 color_discrete_map=color_map_op)
-                # Leyenda redundante eliminada
                 st.plotly_chart(estilo_pro(fig_op, show_legend=False), use_container_width=True)
 
     # 5. ATRIBUTOS ----------------------------------------------------------------
@@ -564,7 +560,6 @@ def main():
         with st.container(border=True):
             st.markdown("#### Evolución Radar")
             col_r1, col_r2 = st.columns(2)
-            # Radar Iván
             d_ivan = DATOS_RADAR_EVO["Iván Hernández"]
             fig_ivan = go.Figure()
             fig_ivan.add_trace(go.Scatterpolar(r=[v[0] for v in d_ivan.values()], theta=list(d_ivan.keys()), fill='toself', name='Junio'))
@@ -572,7 +567,6 @@ def main():
             fig_ivan.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 50])), title="Iván Hernández")
             col_r1.plotly_chart(estilo_pro(fig_ivan, height=400), use_container_width=True)
             
-            # Radar Félix
             d_felix = DATOS_RADAR_EVO["Félix Salgado"]
             fig_felix = go.Figure()
             fig_felix.add_trace(go.Scatterpolar(r=[v[0] for v in d_felix.values()], theta=list(d_felix.keys()), fill='toself', name='Junio'))
@@ -586,7 +580,6 @@ def main():
         data_int = DATOS_INTERNA.get(sel, {})
         
         if data_int:
-            # KPI
             lider = max(data_int.items(), key=lambda x: x[1][1])
             col1, col2, col3 = st.columns(3)
             col1.metric("Puntero Interno", lider[0], f"{lider[1][1]}%")
@@ -607,7 +600,7 @@ def main():
                     ))
                 st.plotly_chart(estilo_pro(fig_slope, height=600), use_container_width=True)
 
-# 7. AUTORIDADES --------------------------------------------------------------
+    # 7. AUTORIDADES --------------------------------------------------------------
     with tabs[6]:
         st.subheader("Aprobación de Autoridades")
         
@@ -616,8 +609,6 @@ def main():
             st.markdown("#### 🇲🇽 Presidenta de México")
             if sel in DATOS_AUTORIDADES["Presidenta"]:
                 d = DATOS_AUTORIDADES["Presidenta"][sel]
-                
-                # KPIs
                 apr_dic = d['Aprueba'][1]
                 apr_jun = d['Aprueba'][0]
                 col1, col2, col3 = st.columns(3)
@@ -625,7 +616,6 @@ def main():
                 col2.metric("Desaprobación", f"{d['Desaprueba'][1]}%")
                 col3.metric("No sabe", f"{d['No sabe'][1]}%")
                 
-                # Gráfica
                 df = pd.DataFrame([{"Cat": k, "Junio": v[0], "Diciembre": v[1]} for k,v in d.items()])
                 fig = go.Figure(data=[
                     go.Bar(name='Junio', x=df["Cat"], y=df["Junio"], marker_color='#B0BEC5', text=df["Junio"], textposition='auto'),
@@ -639,8 +629,6 @@ def main():
             st.markdown("#### 🏛️ Gobernadora del Estado")
             if sel in DATOS_AUTORIDADES["Gobernadora"]:
                 d = DATOS_AUTORIDADES["Gobernadora"][sel]
-                
-                # KPIs
                 apr_dic = d['Aprueba'][1]
                 apr_jun = d['Aprueba'][0]
                 col1, col2, col3 = st.columns(3)
@@ -648,7 +636,6 @@ def main():
                 col2.metric("Desaprobación", f"{d['Desaprueba'][1]}%", delta_color="inverse")
                 col3.metric("No sabe", f"{d['No sabe'][1]}%")
 
-                # Gráfica
                 df = pd.DataFrame([{"Cat": k, "Junio": v[0], "Diciembre": v[1]} for k,v in d.items()])
                 fig = go.Figure(data=[
                     go.Bar(name='Junio', x=df["Cat"], y=df["Junio"], marker_color='#B0BEC5', text=df["Junio"], textposition='auto'),
@@ -661,25 +648,19 @@ def main():
         if sel in ["ACAPULCO", "CHILPANCINGO", "IGUALA"]:
             with st.container(border=True):
                 st.markdown(f"#### 🏙️ Presidente Municipal de {sel.title()}")
-                
-                # Obtener datos específicos del diccionario actualizado "Alcaldes"
                 d_alc = DATOS_AUTORIDADES["Alcaldes"].get(sel, {})
                 
                 if d_alc:
-                    # KPIs
                     apr_dic = d_alc['Aprueba'][1]
                     apr_jun = d_alc['Aprueba'][0]
                     des_dic = d_alc['Desaprueba'][1]
                     des_jun = d_alc['Desaprueba'][0]
                     
                     col1, col2, col3 = st.columns(3)
-                    # Lógica de color para delta: si baja la aprobación es rojo (normal), si sube es verde
                     col1.metric("Aprobación (Dic)", f"{apr_dic}%", delta=f"{apr_dic - apr_jun:.1f} pts vs Jun")
-                    # Lógica inversa para desaprobación: si sube es malo (rojo/inverse)
                     col2.metric("Desaprobación (Dic)", f"{des_dic}%", delta=f"{des_dic - des_jun:.1f} pts", delta_color="inverse")
                     col3.metric("No sabe / NR", f"{d_alc['No sabe'][1]}%")
 
-                    # Gráfica
                     df_alc = pd.DataFrame([
                         {"Categoría": "Aprueba", "Junio": d_alc["Aprueba"][0], "Diciembre": d_alc["Aprueba"][1]},
                         {"Categoría": "Desaprueba", "Junio": d_alc["Desaprueba"][0], "Diciembre": d_alc["Desaprueba"][1]},
@@ -696,7 +677,6 @@ def main():
                     fig_alc.update_layout(barmode='group')
                     st.plotly_chart(estilo_pro(fig_alc, height=350, legend_bottom=True), use_container_width=True)
         else:
-            # Mensaje informativo si están en vista ESTATAL
             st.info("ℹ️ Para ver la evaluación específica de los Presidentes Municipales, seleccione un municipio (Acapulco, Chilpancingo o Iguala) en el menú lateral.")
 
     # 8. SOCIODEM -----------------------------------------------------------------
