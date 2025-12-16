@@ -246,6 +246,64 @@ COLOR_ASPIRANTES = {
 # 🛠️ FUNCIONES AUXILIARES DE ESTILO
 # ==============================================================================
 
+import io
+
+def generar_excel_maestro():
+    """Genera un archivo Excel con múltiples hojas basado en los diccionarios de datos."""
+    output = io.BytesIO()
+    # Usamos el motor xlsxwriter que es muy compatible con Streamlit
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        
+        # 1. PROBLEMAS
+        rows = []
+        for terr, data in DATOS_PROBLEMAS.items():
+            for prob, vals in data.items():
+                rows.append({"Territorio": terr, "Problema": prob, "Junio": vals[0], "Diciembre": vals[1]})
+        pd.DataFrame(rows).to_excel(writer, sheet_name='Problemas', index=False)
+
+        # 2. PARTIDOS
+        rows = []
+        for terr, data in DATOS_VOTO_GOB.items():
+            for part, vals in data.items():
+                rows.append({"Territorio": terr, "Partido": part, "Junio": vals[0], "Diciembre": vals[1]})
+        pd.DataFrame(rows).to_excel(writer, sheet_name='Partidos', index=False)
+
+        # 3. CONOCIMIENTO
+        rows = []
+        for terr, data in DATOS_CONOCIMIENTO.items():
+            for asp, vals in data.items():
+                rows.append({"Territorio": terr, "Aspirante": asp, "Junio": vals[0], "Diciembre": vals[1]})
+        pd.DataFrame(rows).to_excel(writer, sheet_name='Conocimiento', index=False)
+
+        # 4. AUTORIDADES (Incluyendo Alcaldes)
+        rows = []
+        for cargo, territorios in DATOS_AUTORIDADES.items():
+            for terr, metricas in territorios.items():
+                for metrica, vals in metricas.items():
+                    rows.append({
+                        "Cargo": cargo, 
+                        "Territorio": terr, 
+                        "Métrica": metrica, 
+                        "Junio": vals[0], 
+                        "Diciembre": vals[1]
+                    })
+        pd.DataFrame(rows).to_excel(writer, sheet_name='Evaluación Autoridades', index=False)
+
+        # 5. ATRIBUTOS (Solo Diciembre como ejemplo)
+        pd.DataFrame(DATOS_ATRIBUTOS_DIC).to_excel(writer, sheet_name='Atributos Dic', index=False)
+
+        # 6. CAREOS
+        rows = []
+        for terr, data in DATOS_CAREO_1.items(): # Careo 1
+            for cand, val in data.items():
+                 rows.append({"Territorio": terr, "Careo": "Félix Salgado", "Candidato": cand, "Diciembre": val})
+        for terr, data in DATOS_CAREO_2.items(): # Careo 2
+             for cand, val in data.items():
+                 rows.append({"Territorio": terr, "Careo": "Iván Hernández", "Candidato": cand, "Diciembre": val})
+        pd.DataFrame(rows).to_excel(writer, sheet_name='Careos', index=False)
+
+    return output.getvalue()
+
 def estilo_pro(fig, height=500, show_legend=True, legend_bottom=False):
     """Aplica estilo profesional a las gráficas de Plotly"""
     
@@ -330,6 +388,27 @@ def main():
         **Metodología:** Encuesta en vivienda
         """)
         st.info("💡 Use las pestañas superiores para navegar por los módulos.")
+
+    with st.sidebar:
+        st.header("🔍 Configuración")
+        sel = st.selectbox("Seleccionar Territorio:", ["GUERRERO (ESTATAL)", "ACAPULCO", "CHILPANCINGO", "IGUALA"])
+        
+        st.divider()
+        st.subheader("📋 Ficha Técnica")
+        # ... (tu texto de ficha técnica) ...
+        
+        st.divider()
+        
+        # --- BOTÓN DE DESCARGA ---
+        st.subheader("📥 Descargar Datos")
+        excel_data = generar_excel_maestro()
+        st.download_button(
+            label="Descargar Base Maestra (XLSX)",
+            data=excel_data,
+            file_name="Resultados_Guerrero_2025.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            icon="💾"
+        )
 
     tabs = st.tabs(["🚨 Problemas", "🏛️ Partidos", "🧠 Conocimiento", "💭 Opinión", "✨ Atributos", "🗳️ Interna", "👔 Autoridades", "📊 Sociodem", "⚔️ Careo"])
 
