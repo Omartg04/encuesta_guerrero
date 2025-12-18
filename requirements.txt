@@ -10,3 +10,4 @@ streamlit-authenticator
 plotly
 openpyxl
 matplotlib
+bcrypt
