@@ -53,7 +53,7 @@ df_secciones = generar_data_mockup()
 # 🎨 INTERFAZ PRINCIPAL CON NARRATIVA EDUCATIVA
 # ==============================================================================
 
-st.title("🧠 Inteligencia Territorial + Acción CRM")
+st.title("🧠 Inteligencia Territorial + Comunicación Digital")
 st.markdown("""
 **¿Para qué sirve este módulo?** Transforma datos geográficos, sociodemográficos y electorales en acciones de campaña. Permite identificar **dónde** están los votos decisivos, valida la información recabada en territorio como correos y celulares, conecta directamente vía SMS-Correo para enviar el mensaje correcto **a la persona correcta**.
 """)
