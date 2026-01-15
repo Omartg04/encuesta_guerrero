@@ -53,7 +53,8 @@ def main():
     with st.sidebar:
         if st.button("🔄 Recargar Datos"):
             st.cache_data.clear()
-            st.rerun()
+            st.session_state.clear()
+            st.success("✅ Caché limpiado. Recargando...")
             
         st.header("Nivel de Visualización")
         
