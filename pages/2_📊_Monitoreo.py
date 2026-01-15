@@ -51,10 +51,10 @@ def main():
 
     # --- 2. FILTROS SIDEBAR ---
     with st.sidebar:
-        if st.button("🔄 Recargar Datos"):
-            st.cache_data.clear()
-            st.session_state.clear()
-            st.success("✅ Caché limpiado. Recargando...")
+        #if st.button("🔄 Recargar Datos"):
+            #st.cache_data.clear()
+            #st.session_state.clear()
+            #st.success("✅ Caché limpiado. Recargando...")
             
         st.header("Nivel de Visualización")
         
@@ -183,7 +183,7 @@ def main():
                 tooltip=f"{row['id_encuestador']} ({row['auditoria']})"
             ).add_to(m)
 
-        st_folium(m, height=550, use_container_width=True)
+        st_folium(m, height=550, use_container_width=True, returned_objects=[])
 
     # --- 7. SEMÁFORO DE REZAGO ---
     st.markdown("---")
